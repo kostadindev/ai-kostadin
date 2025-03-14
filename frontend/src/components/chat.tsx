@@ -65,25 +65,61 @@ const ChatComponent: React.FC = () => {
     }
   }, []);
 
-  // Send a message and simulate a system response
-  const handleSendMessage = () => {
+  // Send a message and stream the system's response
+  const handleSendMessage = async () => {
     if (isSending || !input.trim()) return;
 
-    const userMessage: Message = { content: input.trim(), role: "user" };
+    const question = input.trim();
+    const userMessage: Message = { content: question, role: "user" };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsSending(true);
 
-    // Simulate a system response after a short delay
-    setTimeout(() => {
-      const systemMessage: Message = {
-        content: "This is a simulated response from the system.",
+    try {
+      const response = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Network error: ${response.statusText}`);
+      }
+
+      // Add an empty system message placeholder to update as chunks arrive
+      setMessages((prev) => [...prev, { content: "", role: "system" }]);
+
+      // Use the stream reader to process incoming chunks
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (reader) {
+        let done = false;
+        while (!done) {
+          const { done: doneReading, value } = await reader.read();
+          done = doneReading;
+          const chunkValue = decoder.decode(value, { stream: !done });
+          // Update the last system message with the new chunk
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const lastIndex = newMessages.length - 1;
+            newMessages[lastIndex] = {
+              ...newMessages[lastIndex],
+              content: newMessages[lastIndex].content + chunkValue,
+            };
+            return newMessages;
+          });
+        }
+      }
+    } catch (error: any) {
+      const errorMessage: Message = {
+        content: "Error fetching response: " + error.message,
         role: "system",
       };
-      setMessages((prev) => [...prev, systemMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsSending(false);
       scrollToBottom();
-    }, 1000);
+    }
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
