@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
 import { Button, Card, Input, Layout, theme } from "antd";
-import { SendOutlined } from "@ant-design/icons";
+import {
+  SendOutlined,
+  DeleteOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
 import MarkdownRenderer from "./markdown-renderer";
 
@@ -34,6 +38,11 @@ const ChatComponent: React.FC = () => {
     const newTheme = checked ? "dark" : "light";
     localStorage.setItem("theme", newTheme);
     window.dispatchEvent(new Event("themeChanged"));
+  };
+
+  // Clear chat handler
+  const handleClearChat = () => {
+    setMessages([]);
   };
 
   // Scroll helper
@@ -94,7 +103,7 @@ const ChatComponent: React.FC = () => {
     }
   }, [messages, scrollToBottom, isUserScrolling]);
 
-  // Use bodyBg for non-chat blocks
+  // Header style
   const headerStyle: React.CSSProperties = {
     height: "80px",
     display: "flex",
@@ -102,7 +111,6 @@ const ChatComponent: React.FC = () => {
     justifyContent: "space-between",
     boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     padding: "0 20px",
-    // backgroundColor: token.colorBgContainer,
   };
 
   const logoStyle: React.CSSProperties = {
@@ -116,14 +124,22 @@ const ChatComponent: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Header with Logo and Theme Switch */}
+      {/* Header with Logo, Reset Button, and Theme Switch */}
       <Header style={headerStyle}>
-        <div style={logoStyle}>AI Kostadin</div>
-        <div>
+        <div style={logoStyle} className="goldman-bold">
+          AI Kostadin
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <DarkModeSwitch
             checked={isDarkMode}
             onChange={toggleDarkMode}
             size={25}
+          />
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={handleClearChat}
+            title="Clear Chat"
+            onMouseDown={(e) => e.preventDefault()}
           />
         </div>
       </Header>
@@ -180,7 +196,7 @@ const ChatComponent: React.FC = () => {
           <div
             className="p-2 border-t flex items-center gap-3"
             style={{
-              backgroundColor: token.bodyBg || token.colorBgContainer,
+              backgroundColor: token.colorBgContainer,
               borderColor: token.colorBorder,
             }}
           >
@@ -189,7 +205,7 @@ const ChatComponent: React.FC = () => {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyPress}
-              placeholder="Type your message here..."
+              placeholder="Ask about anything here.."
               style={{ fontSize: "16px" }}
               maxLength={256}
               disabled={isSending}
