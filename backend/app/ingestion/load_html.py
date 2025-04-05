@@ -1,14 +1,14 @@
 import os
 import time
 import requests
-import tempfile
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
+from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pinecone import Pinecone, ServerlessSpec
 from langchain_huggingface import HuggingFaceEmbeddings
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
 # Environment variables
@@ -22,36 +22,45 @@ pc = Pinecone(api_key=pinecone_api_key)
 # Initialize HuggingFace Embeddings using an open source model
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
+SITEMAP_URL = "https://kostadindev.github.io/sitemap.xml"
 
-def download_pdf(url):
+
+def get_urls_from_sitemap(sitemap_url):
+    response = requests.get(sitemap_url)
+    if response.status_code != 200:
+        raise Exception(f"Failed to load sitemap: {response.status_code}")
+    soup = BeautifulSoup(response.text, "xml")
+    return [loc.text for loc in soup.find_all("loc")]
+
+
+def download_and_clean_html(url):
     response = requests.get(url)
     if response.status_code != 200:
-        raise Exception(
-            f"Failed to download PDF. Status code: {response.status_code}")
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    temp_file.write(response.content)
-    temp_file.close()
-    return temp_file.name
+        raise Exception(f"Failed to download HTML: {response.status_code}")
+    soup = BeautifulSoup(response.text, "html.parser")
+    # Remove unwanted tags
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+    return soup.get_text(separator="\n", strip=True)
 
 
-def extract_documents_from_pdf(pdf_path):
-    loader = PyPDFLoader(pdf_path)
-    documents = loader.load()
-
+def split_into_chunks(text, source_url):
+    document = Document(page_content=text, metadata={"source": source_url})
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=600,
         chunk_overlap=50,
         separators=["\n\n", "\n", ".", " ", ""]
     )
-    return splitter.split_documents(documents)
+    return splitter.split_documents([document])
 
 
 def embed_and_upload_to_pinecone(chunks):
-    # Delete existing index if it exists for a clean start
+    # Delete the existing index if it exists
     if pinecone_index_name in pc.list_indexes().names():
         print(f"Deleting index: {pinecone_index_name}")
         pc.delete_index(pinecone_index_name)
 
+    # Create a new index
     print(f"Creating index: {pinecone_index_name}")
     # For "all-MiniLM-L6-v2", the embedding dimension is 384.
     pc.create_index(
@@ -61,27 +70,25 @@ def embed_and_upload_to_pinecone(chunks):
         spec=ServerlessSpec(cloud="aws", region=pinecone_region)
     )
 
-    # Wait until index is ready
+    # Wait until the index is ready
     while not pc.describe_index(pinecone_index_name).status['ready']:
         time.sleep(1)
 
     index = pc.Index(pinecone_index_name)
 
-    # Get text chunks
     texts = [chunk.page_content for chunk in chunks]
+    print("Embedding HTML text chunks using HuggingFace Embeddings...")
 
-    print("Embedding text chunks using HuggingFace Embeddings...")
     try:
-        # Generate embeddings for all text chunks at once
+        # Embed all text chunks at once
         document_embeddings = embeddings.embed_documents(texts)
     except Exception as e:
         print(f"Embedding failed: {e}")
         document_embeddings = [[0.0] * 384 for _ in texts]
 
-    # Format vectors for Pinecone
     vectors = [
         {
-            "id": f"doc-{i}",
+            "id": f"html-{i}",
             "values": embedding,
             "metadata": {
                 "text": text,
@@ -91,19 +98,29 @@ def embed_and_upload_to_pinecone(chunks):
         for i, (text, embedding) in enumerate(zip(texts, document_embeddings))
     ]
 
-    print(
-        f"Upserting {len(vectors)} vectors into Pinecone (namespace='docs')...")
+    print(f"Upserting {len(vectors)} vectors into Pinecone...")
     index.upsert(vectors=vectors, namespace="docs")
-    print("Upload complete!")
+    print("✅ Upload complete!")
 
 
 def main():
-    pdf_url = "https://kostadindev.github.io/static/documents/cv.pdf"
-    print(f"Downloading PDF from: {pdf_url}")
+    print(f"Fetching sitemap: {SITEMAP_URL}")
     try:
-        pdf_path = download_pdf(pdf_url)
-        chunks = extract_documents_from_pdf(pdf_path)
-        embed_and_upload_to_pinecone(chunks)
+        urls = get_urls_from_sitemap(SITEMAP_URL)
+        all_chunks = []
+
+        for url in urls:
+            print(f"Processing: {url}")
+            try:
+                text = download_and_clean_html(url)
+                chunks = split_into_chunks(text, source_url=url)
+                all_chunks.extend(chunks)
+            except Exception as e:
+                print(f"❌ Error for {url}: {e}")
+
+        print(f"\n✅ Total Chunks Prepared: {len(all_chunks)}")
+        embed_and_upload_to_pinecone(all_chunks)
+
     except Exception as e:
         print(f"Error: {e}")
 
