@@ -23,7 +23,7 @@ headers = {"Authorization": f"token {github_token}"} if github_token else {}
 # === Initialize Pinecone ===
 pc = Pinecone(api_key=pinecone_api_key)
 
-# Optional: create the index if it doesn't exist (for "all-MiniLM-L6-v2", dimension is 384)
+# Create the index only if it doesn't already exist (for "all-MiniLM-L6-v2", dimension is 384)
 if pinecone_index_name not in pc.list_indexes().names():
     print(f"Creating index: {pinecone_index_name}")
     pc.create_index(

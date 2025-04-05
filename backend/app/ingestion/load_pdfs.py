@@ -47,23 +47,21 @@ def extract_documents_from_pdf(pdf_path):
 
 
 def embed_and_upload_to_pinecone(chunks):
-    # Delete existing index if it exists for a clean start
-    if pinecone_index_name in pc.list_indexes().names():
-        print(f"Deleting index: {pinecone_index_name}")
-        pc.delete_index(pinecone_index_name)
-
-    print(f"Creating index: {pinecone_index_name}")
-    # For "all-MiniLM-L6-v2", the embedding dimension is 384.
-    pc.create_index(
-        name=pinecone_index_name,
-        dimension=384,
-        metric="cosine",
-        spec=ServerlessSpec(cloud="aws", region=pinecone_region)
-    )
-
-    # Wait until index is ready
-    while not pc.describe_index(pinecone_index_name).status['ready']:
-        time.sleep(1)
+    # Check if the index exists; if not, create it.
+    if pinecone_index_name not in pc.list_indexes().names():
+        print(f"Creating index: {pinecone_index_name}")
+        # For "all-MiniLM-L6-v2", the embedding dimension is 384.
+        pc.create_index(
+            name=pinecone_index_name,
+            dimension=384,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region=pinecone_region)
+        )
+        # Wait until index is ready
+        while not pc.describe_index(pinecone_index_name).status['ready']:
+            time.sleep(1)
+    else:
+        print(f"Index {pinecone_index_name} already exists.")
 
     index = pc.Index(pinecone_index_name)
 
