@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import SystemMessage, HumanMessage
@@ -9,12 +9,11 @@ from pinecone import Pinecone
 from typing_extensions import TypedDict, List
 
 from langgraph.graph import START, StateGraph
-
 from app.models.query import Query
 
 load_dotenv()
 
-# Initialize Pinecone, embeddings, and Gemini model as before.
+# Initialize Pinecone, embeddings, and Gemini model.
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
 pinecone_region = os.getenv("PINECONE_REGION", "us-east-1")
 pinecone_index_name = os.getenv("PINECONE_INDEX_NAME", "document-index")
@@ -45,17 +44,15 @@ def get_gemini_model():
 def get_system_message():
     return SystemMessage(content=SYSTEM_PROMPT)
 
+
 # Define the state for LangGraph.
-
-
 class State(TypedDict):
     question: str
     context: List[str]
     answer: str
 
+
 # Define the retrieval step: embed the question and query Pinecone.
-
-
 def retrieve(state: State) -> dict:
     query_embedding = embeddings.embed_query(state["question"])
     result = pinecone_index.query(
@@ -73,9 +70,8 @@ def retrieve(state: State) -> dict:
             context += text + "\n\n"
     return {"context": [context.strip()]}
 
+
 # Define the generation step: build the augmented question and get the answer.
-
-
 def generate(state: State) -> dict:
     # Build the prompt with context if available.
     if state["context"] and state["context"][0]:
@@ -103,13 +99,12 @@ router = APIRouter()
 @router.post("/chat")
 async def chat(query: Query):
     try:
-        # Invoke the state graph with the input question.
-        result = graph.invoke({"question": query.question})
-
-        # In this example we simply stream the final answer.
         async def token_generator():
-            yield str(result["answer"])
-
+            # Use astream() with mode "messages" to yield tokens as they are produced.
+            async for chunk in graph.astream({"question": query.question}, stream_mode="messages"):
+                # Each chunk is expected to be an object with a 'content' attribute.
+                print(chunk)
+                yield chunk[0].content
         return StreamingResponse(token_generator(), media_type="text/plain")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
