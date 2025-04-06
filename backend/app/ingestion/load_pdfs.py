@@ -2,6 +2,7 @@ import os
 import time
 import requests
 import tempfile
+import urllib.parse
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -24,19 +25,35 @@ embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 
 def download_pdf(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(
-            f"Failed to download PDF. Status code: {response.status_code}")
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    temp_file.write(response.content)
-    temp_file.close()
-    return temp_file.name
+    if url.startswith("file://"):
+        # Parse the file URL to get the local file path and decode percent-encoded characters
+        parsed = urllib.parse.urlparse(url)
+        local_path = urllib.parse.unquote(parsed.path)
+        # On Windows, remove the leading slash if present (e.g., /C:/...)
+        if os.name == 'nt' and local_path.startswith('/'):
+            local_path = local_path.lstrip('/')
+        if not os.path.exists(local_path):
+            raise Exception(f"Local file not found: {local_path}")
+        return local_path
+    else:
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise Exception(
+                f"Failed to download PDF from {url}. Status code: {response.status_code}"
+            )
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        temp_file.write(response.content)
+        temp_file.close()
+        return temp_file.name
 
 
-def extract_documents_from_pdf(pdf_path):
+def extract_documents_from_pdf(pdf_path, source_url):
     loader = PyPDFLoader(pdf_path)
     documents = loader.load()
+
+    # Add the source URL to metadata for each document
+    for doc in documents:
+        doc.metadata["source"] = source_url
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=600,
@@ -57,7 +74,7 @@ def embed_and_upload_to_pinecone(chunks):
             metric="cosine",
             spec=ServerlessSpec(cloud="aws", region=pinecone_region)
         )
-        # Wait until index is ready
+        # Wait until the index is ready
         while not pc.describe_index(pinecone_index_name).status['ready']:
             time.sleep(1)
     else:
@@ -96,14 +113,27 @@ def embed_and_upload_to_pinecone(chunks):
 
 
 def main():
-    pdf_url = "https://kostadindev.github.io/static/documents/cv.pdf"
-    print(f"Downloading PDF from: {pdf_url}")
-    try:
-        pdf_path = download_pdf(pdf_url)
-        chunks = extract_documents_from_pdf(pdf_path)
-        embed_and_upload_to_pinecone(chunks)
-    except Exception as e:
-        print(f"Error: {e}")
+    # List of PDF URLs to process, including a remote and a local URL.
+    pdf_urls = [
+        "https://kostadindev.github.io/static/documents/cv.pdf",
+        "https://kostadindev.github.io/static/documents/sbu_transcript.pdf",
+        "file:///C:/Users/kosta/OneDrive/Desktop/MS%20Application%20Materials/emf-ellipse-publication.pdf"
+    ]
+
+    all_chunks = []
+    for url in pdf_urls:
+        print(f"Processing PDF from: {url}")
+        try:
+            pdf_path = download_pdf(url)
+            chunks = extract_documents_from_pdf(pdf_path, source_url=url)
+            all_chunks.extend(chunks)
+        except Exception as e:
+            print(f"Error processing {url}: {e}")
+
+    if all_chunks:
+        embed_and_upload_to_pinecone(all_chunks)
+    else:
+        print("No chunks to upload.")
 
 
 if __name__ == "__main__":

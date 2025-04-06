@@ -47,8 +47,8 @@ def main():
     print("Index is ready.")
 
     # === 6. Call the ingestion scripts using the new index ===
-    # print("\n--- Running GitHub Loader ---")
-    # load_github_main()
+    print("\n--- Running GitHub Loader ---")
+    load_github_main()
 
     print("\n--- Running PDF Loader ---")
     load_pdfs_main()

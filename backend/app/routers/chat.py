@@ -57,7 +57,7 @@ def retrieve(state: State) -> dict:
     query_embedding = embeddings.embed_query(state["question"])
     result = pinecone_index.query(
         vector=query_embedding,
-        top_k=5,
+        top_k=10,
         namespace="docs",
         include_metadata=True
     )
@@ -103,7 +103,6 @@ async def chat(query: Query):
             # Use astream() with mode "messages" to yield tokens as they are produced.
             async for chunk in graph.astream({"question": query.question}, stream_mode="messages"):
                 # Each chunk is expected to be an object with a 'content' attribute.
-                print(chunk)
                 yield chunk[0].content
         return StreamingResponse(token_generator(), media_type="text/plain")
     except Exception as e:
