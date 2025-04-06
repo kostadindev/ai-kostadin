@@ -6,10 +6,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import SystemMessage, HumanMessage
 from langchain_huggingface import HuggingFaceEmbeddings
 from pinecone import Pinecone
+from typing_extensions import TypedDict, List
+
+from langgraph.graph import START, StateGraph
+
 from app.models.query import Query
 
 load_dotenv()
 
+# Initialize Pinecone, embeddings, and Gemini model as before.
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
 pinecone_region = os.getenv("PINECONE_REGION", "us-east-1")
 pinecone_index_name = os.getenv("PINECONE_INDEX_NAME", "document-index")
@@ -40,40 +45,71 @@ def get_gemini_model():
 def get_system_message():
     return SystemMessage(content=SYSTEM_PROMPT)
 
+# Define the state for LangGraph.
+
+
+class State(TypedDict):
+    question: str
+    context: List[str]
+    answer: str
+
+# Define the retrieval step: embed the question and query Pinecone.
+
+
+def retrieve(state: State) -> dict:
+    query_embedding = embeddings.embed_query(state["question"])
+    result = pinecone_index.query(
+        vector=query_embedding,
+        top_k=5,
+        namespace="docs",
+        include_metadata=True
+    )
+    matches = result.get("matches", [])
+    context = ""
+    for match in matches:
+        metadata = match.get("metadata", {})
+        text = metadata.get("text", "")
+        if text:
+            context += text + "\n\n"
+    return {"context": [context.strip()]}
+
+# Define the generation step: build the augmented question and get the answer.
+
+
+def generate(state: State) -> dict:
+    # Build the prompt with context if available.
+    if state["context"] and state["context"][0]:
+        augmented_question = f"Context:\n{state['context'][0]}\nQuestion: {state['question']}"
+    else:
+        augmented_question = state["question"]
+
+    system_message = get_system_message()
+    user_message = HumanMessage(content=augmented_question)
+
+    # Get the answer synchronously.
+    gemini_model = get_gemini_model()
+    response = gemini_model.invoke([system_message, user_message])
+    return {"answer": response.content}
+
+
+# Build the LangGraph state graph.
+graph_builder = StateGraph(State).add_sequence([retrieve, generate])
+graph_builder.add_edge(START, "retrieve")
+graph = graph_builder.compile()
 
 router = APIRouter()
 
 
 @router.post("/chat")
-async def chat(query: Query, gemini_model=Depends(get_gemini_model)):
+async def chat(query: Query):
     try:
-        query_embedding = embeddings.embed_query(query.question)
-        result = pinecone_index.query(
-            vector=query_embedding,
-            top_k=5,
-            namespace="docs",
-            include_metadata=True
-        )
-        matches = result.get("matches", [])
-        context = ""
-        for match in matches:
-            metadata = match.get("metadata", {})
-            text = metadata.get("text", "")
-            if text:
-                context += text + "\n\n"
-        if context.strip():
-            augmented_question = f"Context:\n{context}\nQuestion: {query.question}"
-        else:
-            augmented_question = query.question
+        # Invoke the state graph with the input question.
+        result = graph.invoke({"question": query.question})
 
-        system_message = get_system_message()
-        user_message = HumanMessage(content=augmented_question)
-
+        # In this example we simply stream the final answer.
         async def token_generator():
-            async for chunk in gemini_model.astream([system_message, user_message]):
-                yield str(chunk.content)
+            yield str(result["answer"])
 
         return StreamingResponse(token_generator(), media_type="text/plain")
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
