@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
 import { Button, Card, Input, Layout, theme } from "antd";
-import {
-  SendOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+import { SendOutlined, ReloadOutlined } from "@ant-design/icons";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
 import MarkdownRenderer from "./markdown-renderer";
+import DefaultPrompts from "./default-prompts";
 
 const { Header } = Layout;
 
@@ -66,30 +63,28 @@ const ChatComponent: React.FC = () => {
   }, []);
 
   // Send a message and stream the system's response
-  const handleSendMessage = async () => {
-    if (isSending || !input.trim()) return;
+  const handleSendMessage = async (overrideInput?: string) => {
+    const messageToSend = overrideInput?.trim() || input.trim();
+    if (isSending || !messageToSend) return;
 
-    const question = input.trim();
-    const userMessage: Message = { content: question, role: "user" };
+    const userMessage: Message = { content: messageToSend, role: "user" };
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    setInput(""); // clear visible input
     setIsSending(true);
 
     try {
       const response = await fetch("http://localhost:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question: messageToSend }),
       });
 
       if (!response.ok) {
         throw new Error(`Network error: ${response.statusText}`);
       }
 
-      // Add an empty system message placeholder to update as chunks arrive
       setMessages((prev) => [...prev, { content: "", role: "system" }]);
 
-      // Use the stream reader to process incoming chunks
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       if (reader) {
@@ -98,7 +93,6 @@ const ChatComponent: React.FC = () => {
           const { done: doneReading, value } = await reader.read();
           done = doneReading;
           const chunkValue = decoder.decode(value, { stream: !done });
-          // Update the last system message with the new chunk
           setMessages((prev) => {
             const newMessages = [...prev];
             const lastIndex = newMessages.length - 1;
@@ -194,13 +188,11 @@ const ChatComponent: React.FC = () => {
           }}
         >
           {messages.length === 0 && (
-            <div
-              className="text-center mb-4"
-              style={{ color: token.colorTextSecondary }}
-            >
-              No messages yet. Start the conversation!
-            </div>
+            <DefaultPrompts
+              onPromptSelect={(prompt) => handleSendMessage(prompt)}
+            />
           )}
+
           {messages.map((msg, index) => (
             <div key={index} className="my-2 pb-1">
               {msg.role === "user" ? (
