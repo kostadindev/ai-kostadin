@@ -11,7 +11,7 @@ const api = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 interface Message {
   content: string;
-  role: "user" | "system";
+  role: "user" | "system" | "assistant";
 }
 
 const primaryColor = "#e89a3c";
@@ -64,28 +64,28 @@ const ChatComponent: React.FC = () => {
     }
   }, []);
 
-  // Send a message and stream the system's response
   const handleSendMessage = async (overrideInput?: string) => {
     const messageToSend = overrideInput?.trim() || input.trim();
     if (isSending || !messageToSend) return;
 
     const userMessage: Message = { content: messageToSend, role: "user" };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput(""); // clear visible input
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setInput("");
     setIsSending(true);
 
     try {
       const response = await fetch(`${api}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: messageToSend }),
+        body: JSON.stringify({ history: newMessages }),
       });
 
       if (!response.ok) {
         throw new Error(`Network error: ${response.statusText}`);
       }
 
-      setMessages((prev) => [...prev, { content: "", role: "system" }]);
+      setMessages((prev) => [...prev, { content: "", role: "assistant" }]);
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -96,20 +96,20 @@ const ChatComponent: React.FC = () => {
           done = doneReading;
           const chunkValue = decoder.decode(value, { stream: !done });
           setMessages((prev) => {
-            const newMessages = [...prev];
-            const lastIndex = newMessages.length - 1;
-            newMessages[lastIndex] = {
-              ...newMessages[lastIndex],
-              content: newMessages[lastIndex].content + chunkValue,
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              content: updated[lastIndex].content + chunkValue,
             };
-            return newMessages;
+            return updated;
           });
         }
       }
     } catch (error: any) {
       const errorMessage: Message = {
         content: "Error fetching response: " + error.message,
-        role: "system",
+        role: "assistant",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
