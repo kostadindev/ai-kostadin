@@ -5,6 +5,8 @@ import { DarkModeSwitch } from "react-toggle-dark-mode";
 import MarkdownRenderer from "./markdown-renderer";
 import DefaultPrompts from "./default-prompts";
 
+import "./styles.css";
+
 const { Header } = Layout;
 
 const api = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -264,7 +266,7 @@ const ChatComponent: React.FC = () => {
         {/* Suggestions Bar */}
         {suggestions.length > 0 && (
           <div
-            className="px-4 pt-2 pb-3 flex flex-wrap gap-2 border-t"
+            className="suggestions-animate px-4 pt-2 pb-3 flex flex-wrap gap-2 border-t"
             style={{
               borderColor: token.colorBorder,
               backgroundColor: isDarkMode ? token.colorBgContainer : "#ffffff",
