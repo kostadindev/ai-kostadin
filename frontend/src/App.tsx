@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Chat from "./components/chat";
 import { ConfigProvider, theme } from "antd";
 
