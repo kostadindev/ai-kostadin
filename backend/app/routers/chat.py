@@ -150,3 +150,37 @@ async def chat(query: QueryHistory):
         return StreamingResponse(token_generator(), media_type="text/plain")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/suggest-followups")
+async def suggest_followups(query: QueryHistory):
+    """
+    Suggest follow-up questions based on the current conversation history.
+    """
+    try:
+        gemini_model = get_gemini_model()
+
+        # Build the prompt to ask for follow-up suggestions
+        messages = [get_system_message()]
+        for msg in query.history:
+            role = msg.role
+            content = msg.content
+            if role == "user":
+                messages.append(HumanMessage(content=content))
+            elif role == "assistant":
+                messages.append(AIMessage(content=content))
+            elif role == "system":
+                messages.append(SystemMessage(content=content))
+
+        messages.append(HumanMessage(
+            content="Based on the above, suggest 3 thoughtful follow-up questions a user might ask next."))
+
+        response = gemini_model.invoke(messages)
+        suggestions = response.content.strip().split("\n")
+
+        # Normalize suggestions (remove any leading numbering or dashes)
+        cleaned = [s.lstrip("1234567890.-) ").strip()
+                   for s in suggestions if s.strip()]
+        return {"suggestions": cleaned}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
