@@ -33,6 +33,7 @@ class HuggingFaceInferenceEmbeddings:
 
 # Use LangChain's model in dev, custom in prod
 if env == "development":
+
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2")
 else:
@@ -177,7 +178,7 @@ async def suggest_followups(query: QueryHistory):
             elif role == "system":
                 messages.append(SystemMessage(content=content))
         messages.append(HumanMessage(
-            content="Based on the above, suggest 3 thoughtful follow-up questions a user might ask next."))
+            content="Suggest 1 or 2 very short follow-up questions (3 to 5 words max each). Be concise and respond only in text without markdown."))
         response = gemini_model.invoke(messages)
         suggestions = response.content.strip().split("\n")
         cleaned = [s.lstrip("1234567890.-) ").strip()
