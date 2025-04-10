@@ -24,14 +24,14 @@ const ChatComponent: React.FC = () => {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const messageContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // Dark mode state (initialize based on localStorage)
+  // Dark mode state
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
     localStorage.getItem("theme") !== "light"
   );
 
-  // Theme toggle handler
   const toggleDarkMode = (checked: boolean) => {
     setIsDarkMode(checked);
     const newTheme = checked ? "dark" : "light";
@@ -39,12 +39,11 @@ const ChatComponent: React.FC = () => {
     window.dispatchEvent(new Event("themeChanged"));
   };
 
-  // Clear chat handler
   const handleClearChat = () => {
     setMessages([]);
+    setSuggestions([]);
   };
 
-  // Scroll helper
   const scrollToBottom = useCallback(() => {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollTo({
@@ -54,7 +53,6 @@ const ChatComponent: React.FC = () => {
     }
   }, []);
 
-  // When the user scrolls the messages container
   const handleScroll = useCallback(() => {
     if (messageContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } =
@@ -63,6 +61,24 @@ const ChatComponent: React.FC = () => {
       setIsUserScrolling(!isAtBottom);
     }
   }, []);
+
+  const fetchSuggestions = async (fullHistory: Message[]) => {
+    try {
+      const res = await fetch(`${api}/suggest-followups`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ history: fullHistory }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuggestions(data.suggestions || []);
+      } else {
+        console.warn("Suggestion fetch failed:", data.detail);
+      }
+    } catch (err) {
+      console.warn("Error fetching suggestions:", err);
+    }
+  };
 
   const handleSendMessage = async (overrideInput?: string) => {
     const messageToSend = overrideInput?.trim() || input.trim();
@@ -73,6 +89,7 @@ const ChatComponent: React.FC = () => {
     setMessages(newMessages);
     setInput("");
     setIsSending(true);
+    setSuggestions([]); // clear previous suggestions
 
     try {
       const response = await fetch(`${api}/chat`, {
@@ -106,6 +123,16 @@ const ChatComponent: React.FC = () => {
           });
         }
       }
+
+      await fetchSuggestions([
+        ...newMessages,
+        {
+          content:
+            messages[messages.length - 1]?.content ||
+            "Let me know how else I can help.",
+          role: "assistant",
+        },
+      ]);
     } catch (error: any) {
       const errorMessage: Message = {
         content: "Error fetching response: " + error.message,
@@ -130,12 +157,9 @@ const ChatComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    // Wake up the backend when the component mounts
     const wakeUpServer = async () => {
       try {
-        await fetch(`${api}/ping`, {
-          method: "GET",
-        });
+        await fetch(`${api}/ping`, { method: "GET" });
       } catch (err) {
         console.warn("Server wake-up failed:", err);
       }
@@ -150,7 +174,6 @@ const ChatComponent: React.FC = () => {
     }
   }, [messages, scrollToBottom, isUserScrolling]);
 
-  // Header style
   const headerStyle: React.CSSProperties = {
     height: "80px",
     display: "flex",
@@ -238,7 +261,27 @@ const ChatComponent: React.FC = () => {
           ))}
         </div>
 
-        {/* Sticky Input Area */}
+        {/* Suggestions Bar */}
+        {suggestions.length > 0 && (
+          <div className="px-4 pb-2 flex flex-wrap gap-2">
+            {suggestions.map((text, index) => (
+              <Button
+                key={index}
+                onClick={() => handleSendMessage(text)}
+                size="small"
+                style={{
+                  backgroundColor: token.colorPrimary,
+                  color: "white",
+                  borderRadius: "16px",
+                }}
+              >
+                {text}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {/* Input Area */}
         <div className="sticky bottom-0 w-full">
           <div
             className="p-2 border-t flex items-center gap-3"
