@@ -1,3 +1,4 @@
+from huggingface_hub import InferenceClient
 import os
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
@@ -13,6 +14,20 @@ from app.models.query import Query
 
 load_dotenv()
 
+
+class HuggingFaceInferenceEmbeddings:
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
+        self.token = os.getenv("HF_API_TOKEN")
+        if not self.token:
+            raise ValueError("HF_API_TOKEN not set in environment variables.")
+        self.client = InferenceClient(token=self.token)
+        self.model = model_name
+
+    def embed_query(self, text: str):
+        embedding = self.client.feature_extraction(text, model=self.model)
+        return embedding.tolist() if hasattr(embedding, 'tolist') else embedding
+
+
 # Initialize Pinecone, embeddings, and Gemini model.
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
 pinecone_region = os.getenv("PINECONE_REGION", "us-east-1")
@@ -20,7 +35,7 @@ pinecone_index_name = os.getenv("PINECONE_INDEX_NAME", "document-index")
 pc = Pinecone(api_key=pinecone_api_key)
 pinecone_index = pc.Index(pinecone_index_name)
 
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+embeddings = HuggingFaceInferenceEmbeddings()
 
 SYSTEM_PROMPT = (
     "You are AI Kostadin and you are a chatbot for Kostadin's personal website. "
