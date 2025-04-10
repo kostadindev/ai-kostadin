@@ -1,5 +1,5 @@
 import React from "react";
-import { Card } from "antd";
+import { Button } from "antd";
 
 interface Props {
   onPromptSelect: (prompt: string) => void;
@@ -8,31 +8,33 @@ interface Props {
 }
 
 const prompts = [
-  "What’s Kostadin working on?",
-  "Explain his honors thesis on Recursive QA.",
-  "What formal machine learning courses has Kostadin taken?",
-  "What is Deep Gestures about?",
+  "Current project?",
+  "What's Recursive QA?",
+  "Formal ML coursework?",
+  "Explain Deep Gestures",
 ];
 
-const DefaultPrompts: React.FC<Props> = ({
-  onPromptSelect,
-  cardBackground,
-}) => {
+const DefaultPrompts: React.FC<Props> = ({ onPromptSelect, isDarkMode }) => {
   return (
-    <div className="flex flex-1 flex-col justify-end items-center text-center px-6 pb-8 max-w-2xl mx-auto h-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+    <div className="flex flex-col justify-end items-center text-center px-6 pb-8 max-w-3xl mx-auto h-full w-full">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full"
+        style={{ marginTop: "auto" }}
+      >
         {prompts.map((prompt, idx) => (
-          <Card
+          <Button
             key={idx}
-            hoverable
             onClick={() => onPromptSelect(prompt)}
+            size="large"
             style={{
-              backgroundColor: cardBackground,
+              backgroundColor: isDarkMode ? "#1f1f1f" : "#f5f5f5",
+              borderRadius: "9999px",
+              transition: "all 0.2s ease-in-out",
             }}
-            bodyStyle={{ padding: "16px" }}
+            className="hover:scale-[1.01]"
           >
             {prompt}
-          </Card>
+          </Button>
         ))}
       </div>
     </div>
