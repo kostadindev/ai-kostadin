@@ -24,14 +24,23 @@ const App = () => {
             : theme.darkAlgorithm,
         token: {
           colorPrimary: "#e89a3c",
-          borderRadius: 4,
+          borderRadius: 4, // More rounded corners for all components
         },
         components: {
           Layout: {
             headerBg: currentTheme === "light" ? "#f0f2f5" : "#1f1f1f",
-            headerColor: currentTheme === "light" ? "#f0f2f5" : "#ffffff",
+            headerColor: currentTheme === "light" ? "#000000" : "#ffffff",
             bodyBg: currentTheme === "light" ? "#f0f2f5" : "#121212",
-            siderBg: "#fff",
+            siderBg: currentTheme === "light" ? "#ffffff" : "#1f1f1f",
+          },
+          Card: {
+            borderRadius: 16,
+            boxShadow:
+              currentTheme === "light"
+                ? "0 4px 12px rgba(0, 0, 0, 0.05)"
+                : "0 4px 12px rgba(255, 255, 255, 0.05)",
+            colorBorderSecondary:
+              currentTheme === "light" ? "#d9d9d9" : "rgba(255, 255, 255, 0.1)",
           },
         },
       }}

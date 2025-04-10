@@ -249,11 +249,8 @@ const ChatComponent: React.FC = () => {
               ) : (
                 <Card
                   className="inline-block rounded-lg shadow-md text-black w-full break-words"
-                  hoverable
                   style={{
-                    backgroundColor: isDarkMode
-                      ? token.colorBgContainer
-                      : "#f0f2f5",
+                    backgroundColor: isDarkMode ? "#1f1f1f" : "#f0f2f5",
                   }}
                 >
                   <MarkdownRenderer content={msg.content} />
