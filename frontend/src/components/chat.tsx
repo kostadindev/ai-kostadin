@@ -262,7 +262,6 @@ const ChatComponent: React.FC = () => {
             </div>
           ))}
         </div>
-
         {/* Suggestions Bar */}
         {suggestions.length > 0 && (
           <div
