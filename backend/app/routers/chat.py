@@ -4,13 +4,12 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import SystemMessage, HumanMessage
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from pinecone import Pinecone
 from typing_extensions import TypedDict, List
+from pydantic import BaseModel
 
 from langgraph.graph import START, StateGraph
-from app.models.query import Query
 
 load_dotenv()
 
@@ -25,13 +24,13 @@ class HuggingFaceInferenceEmbeddings:
 
     def embed_query(self, text: str):
         embedding = self.client.feature_extraction(text, model=self.model)
-        return embedding.tolist() if hasattr(embedding, 'tolist') else embedding
+        return embedding.tolist() if hasattr(embedding, "tolist") else embedding
 
 
 # Initialize Pinecone, embeddings, and Gemini model.
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
-pinecone_region = os.getenv("PINECONE_REGION", "us-east-1")
-pinecone_index_name = os.getenv("PINECONE_INDEX_NAME", "document-index")
+pinecone_region = os.getenv("PINECONE_API_REGION", "us-east-1")
+pinecone_index_name = os.getenv("PINECONE_API_INDEX", "document-index")
 pc = Pinecone(api_key=pinecone_api_key)
 pinecone_index = pc.Index(pinecone_index_name)
 
@@ -52,7 +51,7 @@ def get_gemini_model():
     return ChatGoogleGenerativeAI(
         model="gemini-2.0-flash",
         temperature=0.7,
-        api_key=api_key
+        api_key=api_key,
     )
 
 
@@ -60,25 +59,42 @@ def get_system_message():
     return SystemMessage(content=SYSTEM_PROMPT)
 
 
-# Define the state for LangGraph.
+# Define models for conversation history.
+class ChatMessage(BaseModel):
+    role: str  # Expected values: "system", "user", "assistant"
+    content: str
+
+
+class QueryHistory(BaseModel):
+    history: List[ChatMessage]
+
+
+# Update the LangGraph state to include a conversation history list.
 class State(TypedDict):
-    question: str
+    history: List[dict]  # each dict should have a role and content field
     context: List[str]
     answer: str
 
 
-# Define the retrieval step: embed the question and query Pinecone.
+# Retrieve function: get the current question from the last user message.
 def retrieve(state: State) -> dict:
-    query_embedding = embeddings.embed_query(state["question"])
+    current_question = None
+    # Find the most recent user message.
+    for msg in reversed(state["history"]):
+        if msg.get("role") == "user":
+            current_question = msg.get("content")
+            break
+    if not current_question:
+        current_question = state["history"][-1].get("content", "")
+    query_embedding = embeddings.embed_query(current_question)
     result = pinecone_index.query(
         vector=query_embedding,
         top_k=10,
         namespace="docs",
-        include_metadata=True
+        include_metadata=True,
     )
-    matches = result.get("matches", [])
     context = ""
-    for match in matches:
+    for match in result.get("matches", []):
         metadata = match.get("metadata", {})
         text = metadata.get("text", "")
         if text:
@@ -86,20 +102,27 @@ def retrieve(state: State) -> dict:
     return {"context": [context.strip()]}
 
 
-# Define the generation step: build the augmented question and get the answer.
+# Generation function: build a list of messages using the multi-turn structure.
 def generate(state: State) -> dict:
-    # Build the prompt with context if available.
+    messages = [get_system_message()]
+    # Convert each chat message in the history to the proper LangChain message type.
+    for msg in state["history"]:
+        role = msg.get("role")
+        content = msg.get("content")
+        if role == "user":
+            messages.append(HumanMessage(content=content))
+        elif role == "assistant":
+            messages.append(AIMessage(content=content))
+        elif role == "system":
+            messages.append(SystemMessage(content=content))
+    # Optionally, add the retrieved context as a separate message.
     if state["context"] and state["context"][0]:
-        augmented_question = f"Context:\n{state['context'][0]}\nQuestion: {state['question']}"
-    else:
-        augmented_question = state["question"]
+        context_message = HumanMessage(
+            content=f"Relevant context:\n{state['context'][0]}")
+        messages.append(context_message)
 
-    system_message = get_system_message()
-    user_message = HumanMessage(content=augmented_question)
-
-    # Get the answer synchronously.
     gemini_model = get_gemini_model()
-    response = gemini_model.invoke([system_message, user_message])
+    response = gemini_model.invoke(messages)
     return {"answer": response.content}
 
 
@@ -112,13 +135,18 @@ router = APIRouter()
 
 
 @router.post("/chat")
-async def chat(query: Query):
+async def chat(query: QueryHistory):
+    """
+    Updated endpoint to accept a conversation history with multiple turns.
+    Each message includes a role ("system", "user", or "assistant") and content.
+    """
     try:
         async def token_generator():
-            # Use astream() with mode "messages" to yield tokens as they are produced.
-            async for chunk in graph.astream({"question": query.question}, stream_mode="messages"):
-                # Each chunk is expected to be an object with a 'content' attribute.
+            # Convert the pydantic objects to dicts for the internal state.
+            state_input = {"history": [msg.dict() for msg in query.history]}
+            async for chunk in graph.astream(state_input, stream_mode="messages"):
                 yield chunk[0].content
+
         return StreamingResponse(token_generator(), media_type="text/plain")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
