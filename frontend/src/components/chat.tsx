@@ -263,17 +263,38 @@ const ChatComponent: React.FC = () => {
 
         {/* Suggestions Bar */}
         {suggestions.length > 0 && (
-          <div className="px-4 pb-2 flex flex-wrap gap-2">
+          <div
+            className="px-4 pt-2 pb-3 flex flex-wrap gap-2 border-t"
+            style={{
+              borderColor: token.colorBorder,
+              backgroundColor: isDarkMode ? token.colorBgContainer : "#ffffff",
+            }}
+          >
             {suggestions.map((text, index) => (
               <Button
                 key={index}
                 onClick={() => handleSendMessage(text)}
-                size="small"
+                size="middle"
                 style={{
-                  backgroundColor: token.colorPrimary,
-                  color: "white",
-                  borderRadius: "16px",
+                  backgroundColor: isDarkMode ? "#1f1f1f" : "#f5f5f5",
+                  color: isDarkMode ? "#f5f5f5" : "#333",
+                  border: `1px solid ${isDarkMode ? "#333" : "#ddd"}`,
+                  borderRadius: "9999px",
+                  fontSize: "14px",
+                  padding: "4px 12px",
+                  boxShadow: "none",
+                  transition: "all 0.2s ease-in-out",
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = isDarkMode
+                    ? "#2a2a2a"
+                    : "#e6e6e6")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = isDarkMode
+                    ? "#1f1f1f"
+                    : "#f5f5f5")
+                }
               >
                 {text}
               </Button>
