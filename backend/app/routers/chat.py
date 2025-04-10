@@ -105,7 +105,7 @@ def retrieve(state: State) -> dict:
 
     result = pinecone_index.query(
         vector=query_embedding,
-        top_k=10,
+        top_k=5,
         namespace="docs",
         include_metadata=True,
     )

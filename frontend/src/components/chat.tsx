@@ -8,7 +8,6 @@ import DefaultPrompts from "./default-prompts";
 import "./styles.css";
 
 const { Header } = Layout;
-
 const api = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 interface Message {
@@ -21,15 +20,14 @@ const primaryColor = "#e89a3c";
 const ChatComponent: React.FC = () => {
   const { token } = theme.useToken();
 
-  // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const messageContainerRef = React.useRef<HTMLDivElement>(null);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
-  // Dark mode state
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
     localStorage.getItem("theme") !== "light"
   );
@@ -42,8 +40,13 @@ const ChatComponent: React.FC = () => {
   };
 
   const handleClearChat = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
     setMessages([]);
     setSuggestions([]);
+    setIsSending(false);
   };
 
   const scrollToBottom = useCallback(() => {
@@ -91,13 +94,20 @@ const ChatComponent: React.FC = () => {
     setMessages(newMessages);
     setInput("");
     setIsSending(true);
-    setSuggestions([]); // clear previous suggestions
+    setSuggestions([]);
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       const response = await fetch(`${api}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ history: newMessages }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -136,11 +146,15 @@ const ChatComponent: React.FC = () => {
         },
       ]);
     } catch (error: any) {
-      const errorMessage: Message = {
-        content: "Error fetching response: " + error.message,
-        role: "assistant",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      if (error.name === "AbortError") {
+        console.log("Request was aborted");
+      } else {
+        const errorMessage: Message = {
+          content: "Error fetching response: " + error.message,
+          role: "assistant",
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
     } finally {
       setIsSending(false);
       scrollToBottom();
@@ -166,7 +180,6 @@ const ChatComponent: React.FC = () => {
         console.warn("Server wake-up failed:", err);
       }
     };
-
     wakeUpServer();
   }, []);
 
@@ -196,7 +209,6 @@ const ChatComponent: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Header with Logo, Reset Button, and Theme Switch */}
       <Header style={headerStyle}>
         <div style={logoStyle} className="goldman-bold">
           AI Kostadin
@@ -216,9 +228,7 @@ const ChatComponent: React.FC = () => {
         </div>
       </Header>
 
-      {/* Chat Area */}
       <div className="flex flex-col flex-1">
-        {/* Messages Container */}
         <div
           className="flex-1 overflow-auto p-4"
           ref={messageContainerRef}
@@ -262,7 +272,7 @@ const ChatComponent: React.FC = () => {
             </div>
           ))}
         </div>
-        {/* Suggestions Bar */}
+
         {suggestions.length > 0 && (
           <div
             className="px-4 pt-2 pb-2 flex flex-wrap gap-2"
@@ -287,7 +297,6 @@ const ChatComponent: React.FC = () => {
           </div>
         )}
 
-        {/* Input Area */}
         <div className="sticky bottom-0 w-full">
           <div
             className="p-2 border-t flex items-center gap-3"
