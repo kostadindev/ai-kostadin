@@ -241,8 +241,11 @@ const ChatComponent: React.FC = () => {
             <div key={index} className="my-2 pb-1">
               {msg.role === "user" ? (
                 <div
-                  className="inline-block p-2 px-4 rounded-lg break-words text-white"
-                  style={{ backgroundColor: primaryColor, maxWidth: "100%" }}
+                  className="inline-block p-2 px-4 break-words rounded-lg text-white"
+                  style={{
+                    backgroundColor: primaryColor,
+                    maxWidth: "85%",
+                  }}
                 >
                   {msg.content}
                 </div>
