@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import chat
+from fastapi.responses import JSONResponse
 
 app = FastAPI(title="LangChain Chatbot with Gemini 2.0 Flash")
 
@@ -12,5 +13,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/ping")
+async def ping():
+    return JSONResponse(content={"message": "pong"})
 
 app.include_router(chat.router)

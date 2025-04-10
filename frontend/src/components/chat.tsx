@@ -130,6 +130,21 @@ const ChatComponent: React.FC = () => {
   };
 
   useEffect(() => {
+    // Wake up the backend when the component mounts
+    const wakeUpServer = async () => {
+      try {
+        await fetch(`${api}/ping`, {
+          method: "GET",
+        });
+      } catch (err) {
+        console.warn("Server wake-up failed:", err);
+      }
+    };
+
+    wakeUpServer();
+  }, []);
+
+  useEffect(() => {
     if (!isUserScrolling) {
       scrollToBottom();
     }
