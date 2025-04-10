@@ -32,12 +32,11 @@ class HuggingFaceInferenceEmbeddings:
 
 
 # Use LangChain's model in dev, custom in prod
-if env == "development":
-
+if env == "production":
+    embeddings = HuggingFaceInferenceEmbeddings()
+else:
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2")
-else:
-    embeddings = HuggingFaceInferenceEmbeddings()
 
 # Initialize Pinecone, embeddings, and Gemini model.
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
@@ -49,7 +48,7 @@ pinecone_index = pc.Index(pinecone_index_name)
 SYSTEM_PROMPT = (
     "You are AI Kostadin and you are a chatbot for Kostadin's personal website. "
     "Answer questions about him and his work. Do not answer unrelated or inappropriate questions. "
-    "If context is provided, use it to inform your answer."
+    "If context is provided and immediately relevant to the question, use it to inform your answer."
 )
 
 
