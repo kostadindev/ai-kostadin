@@ -1,31 +1,35 @@
 import React from "react";
-import { Card, Typography } from "antd";
-
-const { Title, Paragraph } = Typography;
+import { Card } from "antd";
 
 interface Props {
   onPromptSelect: (prompt: string) => void;
+  isDarkMode: boolean;
+  cardBackground: string;
 }
 
 const prompts = [
   "What’s Kostadin working on?",
   "Explain his honors thesis on Recursive QA.",
-  "Which ML courses has Kostadin taken?",
+  "What formal machine learning courses has Kostadin taken?",
   "What is Deep Gestures about?",
 ];
 
-const DefaultPrompts: React.FC<Props> = ({ onPromptSelect }) => {
+const DefaultPrompts: React.FC<Props> = ({
+  onPromptSelect,
+  cardBackground,
+}) => {
   return (
-    <div className="flex flex-col items-center text-center p-6 max-w-2xl mx-auto">
-      <Paragraph className="text-gray-600 dark:text-gray-300 mb-6">
-        Ask about Kostadin’s work, education, or research.
-      </Paragraph>
+    <div className="flex flex-1 flex-col justify-end items-center text-center px-6 pb-8 max-w-2xl mx-auto h-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
         {prompts.map((prompt, idx) => (
           <Card
             key={idx}
-            className="hover:shadow-lg cursor-pointer transition"
+            hoverable
             onClick={() => onPromptSelect(prompt)}
+            style={{
+              backgroundColor: cardBackground,
+            }}
+            bodyStyle={{ padding: "16px" }}
           >
             {prompt}
           </Card>

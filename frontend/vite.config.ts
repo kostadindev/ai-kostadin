@@ -9,6 +9,9 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '5ed1-2600-4808-5931-a900-a48a-5409-62bc-5c0b.ngrok-free.app'
-    ]
+    ],
+    headers: {
+      'ngrok-skip-browser-warning': 'true'
+    }
   }
 })

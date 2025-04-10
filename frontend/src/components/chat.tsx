@@ -7,6 +7,8 @@ import DefaultPrompts from "./default-prompts";
 
 const { Header } = Layout;
 
+const api = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 interface Message {
   content: string;
   role: "user" | "system";
@@ -73,7 +75,7 @@ const ChatComponent: React.FC = () => {
     setIsSending(true);
 
     try {
-      const response = await fetch("http://localhost:8000/chat", {
+      const response = await fetch(`${api}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: messageToSend }),
@@ -190,6 +192,8 @@ const ChatComponent: React.FC = () => {
           {messages.length === 0 && (
             <DefaultPrompts
               onPromptSelect={(prompt) => handleSendMessage(prompt)}
+              isDarkMode={isDarkMode}
+              cardBackground={isDarkMode ? token.colorBgContainer : "#f0f2f5"}
             />
           )}
 
@@ -233,7 +237,7 @@ const ChatComponent: React.FC = () => {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyPress}
-              placeholder="Ask about anything here.."
+              placeholder="Ask about Kostadin's work"
               style={{ fontSize: "16px" }}
               maxLength={256}
               disabled={isSending}
@@ -241,7 +245,7 @@ const ChatComponent: React.FC = () => {
             />
             <Button
               icon={<SendOutlined />}
-              onClick={handleSendMessage}
+              onClick={() => handleSendMessage()}
               disabled={isSending}
             />
           </div>
