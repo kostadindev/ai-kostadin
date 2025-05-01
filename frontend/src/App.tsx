@@ -1,46 +1,67 @@
 import { useState, useEffect } from "react";
-import Chat from "./components/Chat";
+import Chat from "./components/chat";
 import { ConfigProvider, theme } from "antd";
+
+// Theme configuration constants
+const THEME_CONFIG = {
+  light: {
+    algorithm: theme.defaultAlgorithm,
+    layout: {
+      headerBg: "#f0f2f5",
+      headerColor: "#000000",
+      bodyBg: "#f0f2f5",
+      siderBg: "#ffffff",
+    },
+    card: {
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+      colorBorderSecondary: "#d9d9d9",
+    },
+  },
+  dark: {
+    algorithm: theme.darkAlgorithm,
+    layout: {
+      headerBg: "#1f1f1f",
+      headerColor: "#ffffff",
+      bodyBg: "#121212",
+      siderBg: "#1f1f1f",
+    },
+    card: {
+      boxShadow: "0 4px 12px rgba(255, 255, 255, 0.05)",
+      colorBorderSecondary: "rgba(255, 255, 255, 0.1)",
+    },
+  },
+};
+
+const DEFAULT_THEME = "dark";
 
 const App = () => {
   const [currentTheme, setCurrentTheme] = useState<string>(
-    localStorage.getItem("theme") || "dark"
+    localStorage.getItem("theme") || DEFAULT_THEME
   );
 
   useEffect(() => {
     const handleThemeChange = () => {
-      setCurrentTheme(localStorage.getItem("theme") || "dark");
+      setCurrentTheme(localStorage.getItem("theme") || DEFAULT_THEME);
     };
     window.addEventListener("themeChanged", handleThemeChange);
     return () => window.removeEventListener("themeChanged", handleThemeChange);
   }, []);
 
+  const themeConfig = THEME_CONFIG[currentTheme as keyof typeof THEME_CONFIG];
+
   return (
     <ConfigProvider
       theme={{
-        algorithm:
-          currentTheme === "light"
-            ? theme.defaultAlgorithm
-            : theme.darkAlgorithm,
+        algorithm: themeConfig.algorithm,
         token: {
           colorPrimary: "#e89a3c",
-          borderRadius: 4, // More rounded corners for all components
+          borderRadius: 4,
         },
         components: {
-          Layout: {
-            headerBg: currentTheme === "light" ? "#f0f2f5" : "#1f1f1f",
-            headerColor: currentTheme === "light" ? "#000000" : "#ffffff",
-            bodyBg: currentTheme === "light" ? "#f0f2f5" : "#121212",
-            siderBg: currentTheme === "light" ? "#ffffff" : "#1f1f1f",
-          },
+          Layout: themeConfig.layout,
           Card: {
             borderRadius: 16,
-            boxShadow:
-              currentTheme === "light"
-                ? "0 4px 12px rgba(0, 0, 0, 0.05)"
-                : "0 4px 12px rgba(255, 255, 255, 0.05)",
-            colorBorderSecondary:
-              currentTheme === "light" ? "#d9d9d9" : "rgba(255, 255, 255, 0.1)",
+            ...themeConfig.card,
           },
         },
       }}

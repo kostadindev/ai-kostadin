@@ -18,7 +18,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     <div
       className="px-4 pt-2 pb-2 flex flex-wrap gap-2"
       style={{
-        backgroundColor: isDarkMode ? "#1f1f1f" : "#ffffff",
+        backgroundColor: isDarkMode ? "#121212" : "#ffffff",
       }}
     >
       {suggestions.map((text, index) => (
