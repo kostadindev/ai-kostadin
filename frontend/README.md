@@ -1,54 +1,88 @@
-# React + TypeScript + Vite
+# Artificial-Me Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React application built with TypeScript, Vite, and Ant Design. This frontend application provides a user interface for the Artificial-Me project.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Built with React 19 and TypeScript
+- Modern UI components using Ant Design
+- Dark mode support
+- Markdown rendering capabilities
+- Tailwind CSS for styling
+- Docker support for development and production
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Framework**: React 19
+- **Language**: TypeScript
+- **Build Tool**: Vite
+- **UI Library**: Ant Design
+- **Styling**: Tailwind CSS
+- **Markdown**: markdown-to-jsx
+- **Development**: ESLint, TypeScript
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 📦 Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+## 🚀 Development
+
+To start the development server:
+
+```bash
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The application will be available at `http://localhost:5173`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🏗️ Building for Production
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+To build the application for production:
+
+```bash
+npm run build
 ```
+
+The built files will be in the `dist` directory.
+
+## 🐳 Docker Support
+
+### Development
+```bash
+docker build -f Dockerfile.dev -t artificial-me-frontend:dev .
+docker run -p 5173:5173 artificial-me-frontend:dev
+```
+
+### Production
+```bash
+docker build -t artificial-me-frontend:prod .
+docker run -p 80:80 artificial-me-frontend:prod
+```
+
+## 🔍 Code Quality
+
+The project uses ESLint for code quality. To run linting:
+
+```bash
+npm run lint
+```
+
+## 📝 Environment Variables
+
+Create a `.env` file based on `.env.example` with your configuration.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a new Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
