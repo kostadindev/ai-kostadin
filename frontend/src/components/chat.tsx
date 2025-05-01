@@ -1,36 +1,28 @@
-import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
-import { Button, Card, Input, Layout, theme } from "antd";
+import React, { useState } from "react";
+import { Button, Input, Layout, theme } from "antd";
 import { SendOutlined, ReloadOutlined } from "@ant-design/icons";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
-import MarkdownRenderer from "./markdown-renderer";
-import DefaultPrompts from "./default-prompts";
-
-import "./styles.css";
+import { useChat } from "../hooks/useChat";
+import { MessageList } from "./MessageList";
+import { Suggestions } from "./Suggestions";
 
 const { Header } = Layout;
-const api = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
-interface Message {
-  content: string;
-  role: "user" | "system" | "assistant";
-}
-
-const primaryColor = "#e89a3c";
 
 const ChatComponent: React.FC = () => {
   const { token } = theme.useToken();
-
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [isUserScrolling, setIsUserScrolling] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const messageContainerRef = React.useRef<HTMLDivElement>(null);
-  const abortControllerRef = React.useRef<AbortController | null>(null);
-
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
     localStorage.getItem("theme") !== "light"
   );
+
+  const {
+    messages,
+    input,
+    setInput,
+    isSending,
+    suggestions,
+    clearChat,
+    sendMessage,
+  } = useChat();
 
   const toggleDarkMode = (checked: boolean) => {
     setIsDarkMode(checked);
@@ -39,155 +31,16 @@ const ChatComponent: React.FC = () => {
     window.dispatchEvent(new Event("themeChanged"));
   };
 
-  const handleClearChat = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    setMessages([]);
-    setSuggestions([]);
-    setIsSending(false);
-  };
-
-  const scrollToBottom = useCallback(() => {
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTo({
-        top: messageContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, []);
-
-  const handleScroll = useCallback(() => {
-    if (messageContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        messageContainerRef.current;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50;
-      setIsUserScrolling(!isAtBottom);
-    }
-  }, []);
-
-  const fetchSuggestions = async (fullHistory: Message[]) => {
-    try {
-      const res = await fetch(`${api}/suggest-followups`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: fullHistory }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setSuggestions(data.suggestions || []);
-      } else {
-        console.warn("Suggestion fetch failed:", data.detail);
-      }
-    } catch (err) {
-      console.warn("Error fetching suggestions:", err);
-    }
-  };
-
-  const handleSendMessage = async (overrideInput?: string) => {
-    const messageToSend = overrideInput?.trim() || input.trim();
-    if (isSending || !messageToSend) return;
-
-    const userMessage: Message = { content: messageToSend, role: "user" };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
-    setInput("");
-    setIsSending(true);
-    setSuggestions([]);
-
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    try {
-      const response = await fetch(`${api}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: newMessages }),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Network error: ${response.statusText}`);
-      }
-
-      setMessages((prev) => [...prev, { content: "", role: "assistant" }]);
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      if (reader) {
-        let done = false;
-        while (!done) {
-          const { done: doneReading, value } = await reader.read();
-          done = doneReading;
-          const chunkValue = decoder.decode(value, { stream: !done });
-          setMessages((prev) => {
-            const updated = [...prev];
-            const lastIndex = updated.length - 1;
-            updated[lastIndex] = {
-              ...updated[lastIndex],
-              content: updated[lastIndex].content + chunkValue,
-            };
-            return updated;
-          });
-        }
-      }
-
-      await fetchSuggestions([
-        ...newMessages,
-        {
-          content:
-            messages[messages.length - 1]?.content ||
-            "Let me know how else I can help.",
-          role: "assistant",
-        },
-      ]);
-    } catch (error: any) {
-      if (error.name === "AbortError") {
-        console.log("Request was aborted");
-      } else {
-        const errorMessage: Message = {
-          content: "Error fetching response: " + error.message,
-          role: "assistant",
-        };
-        setMessages((prev) => [...prev, errorMessage]);
-      }
-    } finally {
-      setIsSending(false);
-      scrollToBottom();
-    }
-  };
-
-  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !isSending) {
       e.preventDefault();
-      handleSendMessage();
+      sendMessage(input);
     }
   };
-
-  useEffect(() => {
-    const wakeUpServer = async () => {
-      try {
-        await fetch(`${api}/ping`, { method: "GET" });
-      } catch (err) {
-        console.warn("Server wake-up failed:", err);
-      }
-    };
-    wakeUpServer();
-  }, []);
-
-  useEffect(() => {
-    if (!isUserScrolling) {
-      scrollToBottom();
-    }
-  }, [messages, scrollToBottom, isUserScrolling]);
 
   const headerStyle: React.CSSProperties = {
     height: "80px",
@@ -208,7 +61,7 @@ const ChatComponent: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-screen w-full">
       <Header style={headerStyle}>
         <div style={logoStyle} className="goldman-bold">
           AI Kostadin
@@ -221,81 +74,35 @@ const ChatComponent: React.FC = () => {
           />
           <Button
             icon={<ReloadOutlined />}
-            onClick={handleClearChat}
+            onClick={clearChat}
             title="Clear Chat"
             onMouseDown={(e) => e.preventDefault()}
           />
         </div>
       </Header>
 
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <div
-          className="flex-1 overflow-auto p-4"
-          ref={messageContainerRef}
-          onScroll={handleScroll}
+          className="flex-1 overflow-hidden"
           style={{
             backgroundColor: token.colorBgContainer,
             border: `1px solid ${token.colorBorder}`,
             borderRadius: token.borderRadius,
           }}
         >
-          {messages.length === 0 && (
-            <DefaultPrompts
-              onPromptSelect={(prompt) => handleSendMessage(prompt)}
-              isDarkMode={isDarkMode}
-              cardBackground={isDarkMode ? token.colorBgContainer : "#f0f2f5"}
-            />
-          )}
-
-          {messages.map((msg, index) => (
-            <div key={index} className="my-2 pb-1">
-              {msg.role === "user" ? (
-                <div
-                  className="inline-block p-2 px-4 break-words rounded-lg text-white"
-                  style={{
-                    backgroundColor: primaryColor,
-                    maxWidth: "85%",
-                  }}
-                >
-                  {msg.content}
-                </div>
-              ) : (
-                <Card
-                  className="inline-block rounded-lg shadow-md text-black w-full break-words"
-                  style={{
-                    backgroundColor: isDarkMode ? "#1f1f1f" : "#f0f2f5",
-                  }}
-                >
-                  <MarkdownRenderer content={msg.content} />
-                </Card>
-              )}
-            </div>
-          ))}
+          <MessageList
+            messages={messages}
+            isDarkMode={isDarkMode}
+            onPromptSelect={sendMessage}
+            onScroll={() => {}}
+          />
         </div>
 
-        {suggestions.length > 0 && (
-          <div
-            className="px-4 pt-2 pb-2 flex flex-wrap gap-2"
-            style={{
-              backgroundColor: isDarkMode ? token.colorBgContainer : "#ffffff",
-            }}
-          >
-            {suggestions.map((text, index) => (
-              <Button
-                key={index}
-                onClick={() => handleSendMessage(text)}
-                size="middle"
-                style={{
-                  backgroundColor: isDarkMode ? "#1f1f1f" : "#f5f5f5",
-                  borderRadius: "9999px",
-                  transition: "all 0.2s ease-in-out",
-                }}
-              >
-                {text}
-              </Button>
-            ))}
-          </div>
-        )}
+        <Suggestions
+          suggestions={suggestions}
+          isDarkMode={isDarkMode}
+          onSuggestionClick={sendMessage}
+        />
 
         <div className="sticky bottom-0 w-full">
           <div
@@ -318,7 +125,7 @@ const ChatComponent: React.FC = () => {
             />
             <Button
               icon={<SendOutlined />}
-              onClick={() => handleSendMessage()}
+              onClick={() => sendMessage(input)}
               disabled={isSending}
             />
           </div>
