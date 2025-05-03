@@ -11,7 +11,7 @@ const { Header } = Layout;
 const ChatComponent: React.FC = () => {
   const { token } = theme.useToken();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
-    localStorage.getItem("theme") !== "light"
+    localStorage.getItem("theme") === "dark"
   );
 
   const {
