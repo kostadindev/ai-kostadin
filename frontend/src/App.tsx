@@ -32,7 +32,7 @@ const THEME_CONFIG = {
   },
 };
 
-const DEFAULT_THEME = "dark";
+const DEFAULT_THEME = "light";
 
 const App = () => {
   const [currentTheme, setCurrentTheme] = useState<string>(
