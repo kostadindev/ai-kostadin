@@ -1,6 +1,5 @@
-# 🚀 Artificial Me
-
-**Artificial Me** is a personalized AI chatbot that knows everything about Kostadin's work and expertise. Embedded in his personal website, it provides intelligent, context-aware answers using **LangChain, FastAPI, and Google's Gemini 2.0 Flash model**.
+# 🚀 MetaMe
+**MetaMe** is a personalized AI chatbot that knows everything about Kostadin's work and expertise. Embedded in his personal website, it provides intelligent, context-aware answers using **LangChain, FastAPI, and Google's Gemini 2.0 Flash model**.
 
 ## 🏗️ Project Structure
 
