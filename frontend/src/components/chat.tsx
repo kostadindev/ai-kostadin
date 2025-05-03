@@ -64,7 +64,7 @@ const ChatComponent: React.FC = () => {
     <div className="flex flex-col h-screen w-full">
       <Header style={headerStyle}>
         <div style={logoStyle} className="goldman-bold">
-          AI Kostadin
+          Meta Assistant
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <DarkModeSwitch
