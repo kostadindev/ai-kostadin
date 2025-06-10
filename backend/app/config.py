@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     
     # Model Configuration
     # 🔄 Changed to model that is actually available on Hugging Face's inference API
-    EMBEDDING_MODEL: str = Field(default="sentence-transformers/paraphrase-MiniLM-L6-v2", description="Embedding model used for feature extraction")
+    EMBEDDING_MODEL: str = Field(default="sentence-transformers/all-MiniLM-L6-v2", description="Embedding model used for feature extraction")
     GEMINI_MODEL: str = Field(default="gemini-2.0-flash", description="Gemini model to use")
     GEMINI_TEMPERATURE: float = Field(default=0.7, ge=0.0, le=1.0, description="Temperature for Gemini model")
     
