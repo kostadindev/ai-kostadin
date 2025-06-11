@@ -23,6 +23,7 @@ const ChatComponent: React.FC = () => {
     suggestions,
     clearChat,
     sendMessage,
+    onMessagesLoad,
   } = useChat();
 
   const toggleDarkMode = (checked: boolean) => {
@@ -97,6 +98,7 @@ const ChatComponent: React.FC = () => {
             onPromptSelect={sendMessage}
             onScroll={() => {}}
             isTyping={isTyping}
+            onMessagesLoad={onMessagesLoad}
           />
         </div>
 

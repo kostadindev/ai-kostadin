@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Message } from '../types/chat';
 import { chatService } from '../services/chatService';
 
+const CHAT_HISTORY_KEY = "chat_history";
+
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -9,6 +11,10 @@ export const useChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleMessagesLoad = useCallback((loadedMessages: Message[]) => {
+    setMessages(loadedMessages);
+  }, []);
 
   const clearChat = useCallback(() => {
     if (abortControllerRef.current) {
@@ -19,6 +25,7 @@ export const useChat = () => {
     setSuggestions([]);
     setIsSending(false);
     setIsTyping(false);
+    localStorage.removeItem(CHAT_HISTORY_KEY);
   }, []);
 
   const sendMessage = useCallback(async (messageToSend: string) => {
@@ -101,5 +108,6 @@ export const useChat = () => {
     suggestions,
     clearChat,
     sendMessage,
+    onMessagesLoad: handleMessagesLoad,
   };
 }; 

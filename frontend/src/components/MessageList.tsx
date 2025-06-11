@@ -18,9 +18,12 @@ interface MessageListProps {
   onPromptSelect: (prompt: string) => void;
   onScroll: (isUserScrolling: boolean) => void;
   isTyping?: boolean;
+  onMessagesLoad?: (messages: Message[]) => void;
 }
 
 const primaryColor = "#e89a3c";
+const CHAT_HISTORY_KEY = "chat_history";
+const CHAT_EXPIRY_HOURS = 24;
 
 const TypingIndicator: React.FC<{ isTyping: boolean; isDarkMode: boolean }> = ({
   isTyping,
@@ -105,8 +108,46 @@ export const MessageList: React.FC<MessageListProps> = ({
   onPromptSelect,
   onScroll,
   isTyping = false,
+  onMessagesLoad,
 }) => {
   const messageContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load messages from localStorage on component mount
+  useEffect(() => {
+    const loadStoredMessages = () => {
+      try {
+        const storedData = localStorage.getItem(CHAT_HISTORY_KEY);
+        if (storedData) {
+          const { messages: storedMessages, timestamp } =
+            JSON.parse(storedData);
+          const now = new Date().getTime();
+          const expiryTime = timestamp + CHAT_EXPIRY_HOURS * 60 * 60 * 1000;
+
+          if (now < expiryTime && storedMessages.length > 0) {
+            onMessagesLoad?.(storedMessages);
+          } else {
+            // Clear expired messages
+            localStorage.removeItem(CHAT_HISTORY_KEY);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading chat history:", error);
+      }
+    };
+
+    loadStoredMessages();
+  }, [onMessagesLoad]);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      const dataToStore = {
+        messages,
+        timestamp: new Date().getTime(),
+      };
+      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(dataToStore));
+    }
+  }, [messages]);
 
   const scrollToBottom = useCallback(() => {
     if (messageContainerRef.current) {
