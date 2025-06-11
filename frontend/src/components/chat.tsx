@@ -63,75 +63,98 @@ const ChatComponent: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-full">
+    <div
+      className="flex flex-col h-screen w-full transition-colors duration-200"
+      style={{ backgroundColor: token.colorBgLayout }}
+    >
       <Header style={headerStyle}>
-        <div style={logoStyle} className="goldman-bold">
-          AI Kostadin
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <DarkModeSwitch
-            checked={isDarkMode}
-            onChange={toggleDarkMode}
-            size={25}
-          />
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={clearChat}
-            title="Clear Chat"
-            onMouseDown={(e) => e.preventDefault()}
-          />
+        <div className="flex justify-center w-full">
+          <div className="flex justify-between items-center w-full lg:max-w-4xl lg:px-4">
+            <div style={logoStyle} className="goldman-bold lg:pl-4">
+              <a
+                href="https://ai-kostadin.onrender.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: "inherit",
+                  textDecoration: "none",
+                  transition: "opacity 0.2s ease-in-out",
+                }}
+                className="hover:opacity-80"
+              >
+                AI Kostadin
+              </a>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <DarkModeSwitch
+                checked={isDarkMode}
+                onChange={toggleDarkMode}
+                size={25}
+              />
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={clearChat}
+                title="Clear Chat"
+                onMouseDown={(e) => e.preventDefault()}
+              />
+            </div>
+          </div>
         </div>
       </Header>
 
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <div
-          className="flex-1 overflow-hidden"
-          style={{
-            backgroundColor: token.colorBgContainer,
-            border: `1px solid ${token.colorBorder}`,
-            borderRadius: token.borderRadius,
-          }}
-        >
-          <MessageList
-            messages={messages}
-            isDarkMode={isDarkMode}
-            onPromptSelect={sendMessage}
-            onScroll={() => {}}
-            isTyping={isTyping}
-            onMessagesLoad={onMessagesLoad}
-          />
-        </div>
+      <div className="flex justify-center w-full h-full">
+        <div className="flex flex-col w-full lg:max-w-4xl lg:px-4">
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <div
+              className="flex-1 overflow-hidden transition-shadow duration-200 shadow-sm lg:shadow-md"
+              style={{
+                backgroundColor: token.colorBgContainer,
+                border: `1px solid ${token.colorBorder}`,
+                borderRadius: token.borderRadius,
+              }}
+            >
+              <MessageList
+                messages={messages}
+                isDarkMode={isDarkMode}
+                onPromptSelect={sendMessage}
+                onScroll={() => {}}
+                isTyping={isTyping}
+                onMessagesLoad={onMessagesLoad}
+              />
+            </div>
 
-        <Suggestions
-          suggestions={suggestions}
-          isDarkMode={isDarkMode}
-          onSuggestionClick={sendMessage}
-        />
+            <Suggestions
+              suggestions={suggestions}
+              isDarkMode={isDarkMode}
+              onSuggestionClick={sendMessage}
+            />
 
-        <div className="sticky bottom-0 w-full">
-          <div
-            className="p-2 border-t flex items-center gap-3"
-            style={{
-              backgroundColor: token.colorBgContainer,
-              borderColor: token.colorBorder,
-            }}
-          >
-            <Input.TextArea
-              autoSize
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyPress}
-              placeholder="Ask about Kostadin's work"
-              style={{ fontSize: "16px" }}
-              maxLength={256}
-              disabled={isSending}
-              className="flex-1"
-            />
-            <Button
-              icon={<SendOutlined />}
-              onClick={() => sendMessage(input)}
-              disabled={isSending}
-            />
+            <div className="sticky bottom-0 w-full">
+              <div
+                className="p-2 border-t flex items-center gap-3"
+                style={{
+                  backgroundColor: token.colorBgContainer,
+                  borderColor: token.colorBorder,
+                }}
+              >
+                <Input.TextArea
+                  autoSize
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Ask about Kostadin's work"
+                  style={{ fontSize: "16px" }}
+                  maxLength={256}
+                  disabled={isSending}
+                  className="flex-1"
+                />
+                <Button
+                  icon={<SendOutlined />}
+                  onClick={() => sendMessage(input)}
+                  disabled={isSending}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
