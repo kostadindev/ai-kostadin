@@ -1,5 +1,7 @@
-# 🚀 MetaMe
-**MetaMe** is a personalized AI chatbot that knows everything about Kostadin's work and expertise. Embedded in his personal website, it provides intelligent, context-aware answers using **LangChain, FastAPI, and Google's Gemini 2.0 Flash model**.
+# 🚀 AI Kostadin
+**AI Kostadin** is a personalized AI chatbot that knows everything about Kostadin's work and expertise. Embedded in his personal website, it provides intelligent, context-aware answers using **LangChain, FastAPI, and Google's Gemini 2.0 Flash model**.
+
+> 💬 **Build Your Own!** – Anyone can use this project as a template to build a personalized chatbot that knows *them* just like AI Kostadin knows Kostadin.
 
 ## 🏗️ Project Structure
 
