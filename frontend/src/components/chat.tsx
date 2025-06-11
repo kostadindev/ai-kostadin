@@ -1,18 +1,102 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Input, Layout, theme } from "antd";
 import { SendOutlined, ReloadOutlined } from "@ant-design/icons";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
 import { useChat } from "../hooks/useChat";
 import { MessageList } from "./MessageList";
 import { Suggestions } from "./Suggestions";
+import { Particles, initParticlesEngine } from "@tsparticles/react";
+import type { Engine } from "@tsparticles/engine";
+import { loadSlim } from "@tsparticles/slim";
 
 const { Header } = Layout;
+
+// Reusable particles component
+const ParticleBackground = ({ id }: { id: string }) => {
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== "undefined" ? window.innerWidth : 1200,
+    height: typeof window !== "undefined" ? window.innerHeight : 800,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return (
+    <Particles
+      id={id}
+      options={{
+        fullScreen: {
+          enable: false,
+        },
+        fpsLimit: 60,
+        particles: {
+          color: {
+            value: "#e89a3c",
+          },
+          links: {
+            color: "#e89a3c",
+            distance: windowSize.width < 480 ? 100 : 150,
+            enable: true,
+            opacity: 0.8,
+            width: 2,
+          },
+          move: {
+            enable: true,
+            speed: 2,
+            direction: "none",
+            random: false,
+            straight: false,
+            outModes: {
+              default: "bounce",
+              bottom: "bounce",
+              left: "bounce",
+              right: "bounce",
+              top: "bounce",
+            },
+          },
+          number: {
+            value: windowSize.width < 480 ? 24 : 100,
+            density: {
+              enable: false,
+            },
+          },
+          opacity: {
+            value: 1,
+          },
+          size: {
+            value: { min: 2, max: 5 },
+          },
+        },
+        detectRetina: true,
+      }}
+    />
+  );
+};
 
 const ChatComponent: React.FC = () => {
   const { token } = theme.useToken();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
     localStorage.getItem("theme") === "dark"
   );
+  const [init, setInit] = useState(false);
+
+  // Initialize tsParticles
+  useEffect(() => {
+    initParticlesEngine(async (engine: Engine) => {
+      await loadSlim(engine);
+    }).then(() => {
+      setInit(true);
+    });
+  }, []);
 
   const {
     messages,
@@ -51,6 +135,8 @@ const ChatComponent: React.FC = () => {
     justifyContent: "space-between",
     boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     padding: "0 20px",
+    position: "relative",
+    zIndex: 10,
   };
 
   const logoStyle: React.CSSProperties = {
@@ -60,6 +146,7 @@ const ChatComponent: React.FC = () => {
     fontSize: "2rem",
     cursor: "pointer",
     color: token.colorText,
+    textShadow: "0 1px 2px rgba(255, 255, 255, 0.7)",
   };
 
   return (
@@ -102,8 +189,13 @@ const ChatComponent: React.FC = () => {
         </div>
       </Header>
 
-      <div className="flex justify-center w-full h-full">
-        <div className="flex flex-col w-full lg:max-w-4xl lg:px-4">
+      <div className="flex justify-center w-full h-full relative">
+        {init && (
+          <div className="hidden lg:block absolute inset-0 overflow-hidden">
+            <ParticleBackground id="tsparticles-chat" />
+          </div>
+        )}
+        <div className="flex flex-col w-full lg:max-w-4xl lg:px-4 relative z-10">
           <div className="flex flex-col flex-1 overflow-hidden">
             <div
               className="flex-1 overflow-hidden transition-shadow duration-200 shadow-sm lg:shadow-md"
