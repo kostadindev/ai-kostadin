@@ -3,6 +3,8 @@
 
 > 💬 **Build Your Own!** – Anyone can use this project as a template to build a personalized chatbot that knows *them* just like AI Kostadin knows Kostadin.
 
+> 🌐 **Access AI Kostadin** – View the chatbot embedded via iframe on [kostadindev.github.io](https://kostadindev.github.io/) or independently at [ai-kostadin.onrender.com](https://ai-kostadin.onrender.com/).
+
 ## 🏗️ Project Structure
 
 This project consists of:
