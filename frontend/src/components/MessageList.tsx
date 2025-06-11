@@ -16,19 +16,18 @@ const primaryColor = "#e89a3c";
 
 const TypingIndicator: React.FC = () => {
   return (
-    <div className="flex space-x-2">
-      <div
-        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-        style={{ animationDelay: "0ms" }}
-      ></div>
-      <div
-        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-        style={{ animationDelay: "150ms" }}
-      ></div>
-      <div
-        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-        style={{ animationDelay: "300ms" }}
-      ></div>
+    <div className="flex items-baseline gap-0.5">
+      <span className="text-gray-400 animate-pulse">Thinking</span>
+      <div className="flex gap-0.5">
+        <div
+          className="w-[3px] h-[3px] rounded-full bg-gray-400 animate-pulse"
+          style={{ animationDelay: "0ms" }}
+        ></div>
+        <div
+          className="w-[3px] h-[3px] rounded-full bg-gray-400 animate-pulse"
+          style={{ animationDelay: "150ms" }}
+        ></div>
+      </div>
     </div>
   );
 };
