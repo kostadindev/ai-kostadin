@@ -11,6 +11,11 @@ import { loadSlim } from "@tsparticles/slim";
 
 const { Header } = Layout;
 
+// Feature flag for particles
+const ENABLE_PARTICLES = import.meta.env.VITE_ENABLE_PARTICLES === "true";
+const APP_NAME = import.meta.env.VITE_APP_NAME || "AI Kostadin";
+const API_URL = import.meta.env.VITE_API_URL;
+
 // Reusable particles component
 const ParticleBackground = ({ id }: { id: string }) => {
   const [windowSize, setWindowSize] = useState({
@@ -159,7 +164,7 @@ const ChatComponent: React.FC = () => {
           <div className="flex justify-between items-center w-full lg:max-w-4xl lg:px-4">
             <div style={logoStyle} className="goldman-bold lg:pl-4">
               <a
-                href="https://ai-kostadin.onrender.com/"
+                href={API_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -169,7 +174,7 @@ const ChatComponent: React.FC = () => {
                 }}
                 className="hover:opacity-80"
               >
-                AI Kostadin
+                {APP_NAME}
               </a>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -190,7 +195,7 @@ const ChatComponent: React.FC = () => {
       </Header>
 
       <div className="flex justify-center w-full h-full relative">
-        {init && (
+        {ENABLE_PARTICLES && init && (
           <div className="hidden lg:block absolute inset-0 overflow-hidden">
             <ParticleBackground id="tsparticles-chat" />
           </div>

@@ -32,6 +32,10 @@ This project consists of:
 - **State Management**: Context API
 - **Styling**: CSS Modules / Styled Components
 - **UI Components**: Custom-built chat interface
+- **Environment Variables**:
+  - `VITE_API_URL`: Backend API URL (default: http://localhost:8000)
+  - `VITE_ENABLE_PARTICLES`: Enable/disable interactive particle background (default: true)
+  - `VITE_APP_NAME`: Application name displayed in the header (default: "AI Kostadin")
 
 ## 🚀 Getting Started
 
