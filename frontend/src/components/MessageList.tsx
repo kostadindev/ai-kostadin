@@ -4,6 +4,14 @@ import { Message } from "../types/chat";
 import MarkdownRenderer from "./MarkdownRenderer";
 import DefaultPrompts from "./DefaultPrompts";
 
+const bounceKeyframes = `
+  @keyframes customBounce {
+    0%, 100% { transform: translateY(0); }
+    20% { transform: translateY(-2px); }
+    40% { transform: translateY(0); }
+  }
+`;
+
 interface MessageListProps {
   messages: Message[];
   isDarkMode: boolean;
@@ -14,7 +22,10 @@ interface MessageListProps {
 
 const primaryColor = "#e89a3c";
 
-const TypingIndicator: React.FC<{ isTyping: boolean }> = ({ isTyping }) => {
+const TypingIndicator: React.FC<{ isTyping: boolean; isDarkMode: boolean }> = ({
+  isTyping,
+  isDarkMode,
+}) => {
   const [currentWord, setCurrentWord] = useState(0);
   const words = [
     "Thinking",
@@ -49,17 +60,33 @@ const TypingIndicator: React.FC<{ isTyping: boolean }> = ({ isTyping }) => {
     }
   }, [currentWord, words.length, isTyping]);
 
+  const textColor = isDarkMode ? "text-gray-400" : "text-gray-800";
+  const dotColor = isDarkMode ? "bg-gray-400" : "bg-gray-800";
+
   return (
     <div className="flex items-baseline gap-0.5">
-      <span className="text-gray-400 animate-pulse">{words[currentWord]}</span>
+      <style>{bounceKeyframes}</style>
+      <span
+        className={`${textColor} animate-pulse`}
+        style={{ animationDuration: "1.5s" }}
+      >
+        {words[currentWord]}
+      </span>
       <div className="flex gap-0.5">
         <div
-          className="w-[3px] h-[3px] rounded-full bg-gray-400 animate-pulse"
-          style={{ animationDelay: "0ms" }}
+          className={`w-[3px] h-[3px] rounded-full ${dotColor} animate-pulse`}
+          style={{
+            animationDuration: "2s",
+            animation: "customBounce 2s infinite, pulse 1.5s infinite",
+          }}
         ></div>
         <div
-          className="w-[3px] h-[3px] rounded-full bg-gray-400 animate-pulse"
-          style={{ animationDelay: "150ms" }}
+          className={`w-[3px] h-[3px] rounded-full ${dotColor} animate-pulse`}
+          style={{
+            animationDuration: "2s",
+            animation: "customBounce 2s infinite, pulse 1.5s infinite",
+            animationDelay: "0.4s",
+          }}
         ></div>
       </div>
     </div>
@@ -133,7 +160,7 @@ export const MessageList: React.FC<MessageListProps> = ({
               {msg.content ? (
                 <MarkdownRenderer content={msg.content} />
               ) : isTyping ? (
-                <TypingIndicator isTyping={isTyping} />
+                <TypingIndicator isTyping={isTyping} isDarkMode={isDarkMode} />
               ) : null}
             </Card>
           )}
