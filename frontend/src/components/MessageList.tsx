@@ -9,15 +9,36 @@ interface MessageListProps {
   isDarkMode: boolean;
   onPromptSelect: (prompt: string) => void;
   onScroll: (isUserScrolling: boolean) => void;
+  isTyping?: boolean;
 }
 
 const primaryColor = "#e89a3c";
+
+const TypingIndicator: React.FC = () => {
+  return (
+    <div className="flex space-x-2">
+      <div
+        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+        style={{ animationDelay: "0ms" }}
+      ></div>
+      <div
+        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+        style={{ animationDelay: "150ms" }}
+      ></div>
+      <div
+        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+        style={{ animationDelay: "300ms" }}
+      ></div>
+    </div>
+  );
+};
 
 export const MessageList: React.FC<MessageListProps> = ({
   messages,
   isDarkMode,
   onPromptSelect,
   onScroll,
+  isTyping = false,
 }) => {
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +97,11 @@ export const MessageList: React.FC<MessageListProps> = ({
                 backgroundColor: isDarkMode ? "#1f1f1f" : "#f0f2f5",
               }}
             >
-              <MarkdownRenderer content={msg.content} />
+              {msg.content ? (
+                <MarkdownRenderer content={msg.content} />
+              ) : isTyping ? (
+                <TypingIndicator />
+              ) : null}
             </Card>
           )}
         </div>

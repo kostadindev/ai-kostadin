@@ -6,6 +6,7 @@ export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -17,6 +18,7 @@ export const useChat = () => {
     setMessages([]);
     setSuggestions([]);
     setIsSending(false);
+    setIsTyping(false);
   }, []);
 
   const sendMessage = useCallback(async (messageToSend: string) => {
@@ -40,6 +42,7 @@ export const useChat = () => {
       if (!stream) return;
 
       setMessages((prev) => [...prev, { content: "", role: "assistant" }]);
+      setIsTyping(true);
 
       const reader = stream.getReader();
       const decoder = new TextDecoder();
@@ -49,6 +52,7 @@ export const useChat = () => {
         if (done) break;
 
         const chunkValue = decoder.decode(value, { stream: true });
+        setIsTyping(false);
         setMessages((prev) => {
           const updated = [...prev];
           const lastIndex = updated.length - 1;
@@ -80,6 +84,7 @@ export const useChat = () => {
       }
     } finally {
       setIsSending(false);
+      setIsTyping(false);
     }
   }, [messages, isSending]);
 
@@ -92,6 +97,7 @@ export const useChat = () => {
     input,
     setInput,
     isSending,
+    isTyping,
     suggestions,
     clearChat,
     sendMessage,

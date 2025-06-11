@@ -19,6 +19,7 @@ const ChatComponent: React.FC = () => {
     input,
     setInput,
     isSending,
+    isTyping,
     suggestions,
     clearChat,
     sendMessage,
@@ -95,6 +96,7 @@ const ChatComponent: React.FC = () => {
             isDarkMode={isDarkMode}
             onPromptSelect={sendMessage}
             onScroll={() => {}}
+            isTyping={isTyping}
           />
         </div>
 
