@@ -16,7 +16,7 @@ const ENABLE_PARTICLES = import.meta.env.VITE_ENABLE_PARTICLES === "true";
 const APP_NAME = import.meta.env.VITE_APP_NAME || "AI Kostadin";
 
 // Reusable particles component
-const ParticleBackground = React.memo(({ id }: { id: string }) => {
+const ParticleBackground = ({ id }: { id: string }) => {
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 1200,
     height: typeof window !== "undefined" ? window.innerHeight : 800,
@@ -84,7 +84,7 @@ const ParticleBackground = React.memo(({ id }: { id: string }) => {
       }}
     />
   );
-});
+};
 
 const ChatComponent: React.FC = () => {
   const { token } = theme.useToken();
@@ -212,48 +212,6 @@ const ChatComponent: React.FC = () => {
             >
               <div
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: token.colorBorder,
-                  opacity: 0.08,
-                  pointerEvents: "none",
-                  zIndex: 0,
-                  maskImage: `url("data:image/svg+xml,%3Csvg width='120' height='104' viewBox='0 0 120 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0l60 34.64v69.28L60 138.56 0 103.92V34.64L60 0zm0 8L8 34.64v61.28L60 130.56l52-34.64V34.64L60 8z' fill='%23000' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-                  WebkitMaskImage: `url("data:image/svg+xml,%3Csvg width='120' height='104' viewBox='0 0 120 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0l60 34.64v69.28L60 138.56 0 103.92V34.64L60 0zm0 8L8 34.64v61.28L60 130.56l52-34.64V34.64L60 8z' fill='%23000' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-                  maskSize: "120px 104px",
-                  WebkitMaskSize: "120px 104px",
-                  maskRepeat: "repeat",
-                  WebkitMaskRepeat: "repeat",
-                  maskPosition: "center",
-                  WebkitMaskPosition: "center",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: token.colorBorder,
-                  opacity: 0.04,
-                  pointerEvents: "none",
-                  zIndex: 0,
-                  maskImage: `url("data:image/svg+xml,%3Csvg width='120' height='104' viewBox='0 0 120 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0l60 34.64v69.28L60 138.56 0 103.92V34.64L60 0zm0 8L8 34.64v61.28L60 130.56l52-34.64V34.64L60 8z' fill='%23000' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-                  WebkitMaskImage: `url("data:image/svg+xml,%3Csvg width='120' height='104' viewBox='0 0 120 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0l60 34.64v69.28L60 138.56 0 103.92V34.64L60 0zm0 8L8 34.64v61.28L60 130.56l52-34.64V34.64L60 8z' fill='%23000' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-                  maskSize: "120px 104px",
-                  WebkitMaskSize: "120px 104px",
-                  maskRepeat: "repeat",
-                  WebkitMaskRepeat: "repeat",
-                  maskPosition: "60px 52px",
-                  WebkitMaskPosition: "60px 52px",
-                }}
-              />
-              <div
-                style={{
                   position: "relative",
                   zIndex: 1,
                   height: "100%",
@@ -269,6 +227,27 @@ const ChatComponent: React.FC = () => {
                   onMessagesLoad={onMessagesLoad}
                 />
               </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: token.colorBorder,
+                  opacity: 0.12,
+                  pointerEvents: "none",
+                  zIndex: 0,
+                  maskImage: `url("data:image/svg+xml,%3Csvg width='104' height='240' viewBox='0 0 104 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='52,8 100,40 100,200 52,232 4,200 4,40' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E")`,
+                  WebkitMaskImage: `url("data:image/svg+xml,%3Csvg width='104' height='240' viewBox='0 0 104 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='52,8 100,40 100,200 52,232 4,200 4,40' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E")`,
+                  maskSize: "104px 240px",
+                  WebkitMaskSize: "104px 240px",
+                  maskRepeat: "repeat",
+                  WebkitMaskRepeat: "repeat",
+                  maskPosition: "0 0",
+                  WebkitMaskPosition: "0 0",
+                }}
+              />
             </div>
 
             <Suggestions
