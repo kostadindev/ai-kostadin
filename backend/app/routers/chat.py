@@ -101,25 +101,54 @@ async def chat(query: QueryHistory):
 @router.post("/suggest-followups")
 async def suggest_followups(query: QueryHistory):
     """
-    Generate follow-up question suggestions.
+    Generate follow-up question suggestions focused on technical terms, unique terminology, 
+    and unique aspects about Kostadin, avoiding previously asked questions.
     
     Args:
         query: The chat history.
         
     Returns:
-        Dictionary containing suggested follow-up questions.
+        Dictionary containing suggested follow-up questions, or empty list if no good follow-ups.
     """
     try:
+        # Extract previous questions to avoid repetition
+        previous_questions = [
+            msg.content.lower().strip() 
+            for msg in query.history 
+            if msg.role == "user"
+        ]
+        
         messages = gemini_service.create_messages(
             [msg.dict() for msg in query.history]
         )
         messages.append(HumanMessage(
-            content="Suggest 1 or 2 very short follow-up questions (3 to 5 words max each). "
-            "Be concise and respond only in text without markdown."
+            content="Based on the conversation, suggest 1-2 NEW follow-up questions that either: "
+            "1) Ask for clarification about technical terms, key concepts, or unique terminology mentioned, or "
+            "2) Explore unique aspects about Kostadin's background, experience, or preferences. "
+            "Look for domain-specific terms, acronyms, or specialized vocabulary that might need explanation. "
+            "IMPORTANT: Do not suggest questions that have already been asked in the conversation. "
+            "Keep questions under 5 words each. If there are no new technical terms, unique terminology, or "
+            "unique aspects to explore, respond with 'NO_FOLLOWUP'. Be specific and avoid generic questions."
         ))
         response = gemini_service.generate_response(messages)
-        suggestions = response.strip().split("\n")
+        
+        if "NO_FOLLOWUP" in response.upper():
+            return {"suggestions": []}
+            
+        suggestions = [s.strip() for s in response.strip().split("\n") if s.strip()]
         cleaned = [s.lstrip("1234567890.-) ").strip() for s in suggestions if s.strip()]
-        return {"suggestions": cleaned}
+        
+        # Filter out suggestions that are too similar to previous questions
+        filtered_suggestions = []
+        for suggestion in cleaned:
+            suggestion_lower = suggestion.lower()
+            # Check if this suggestion is too similar to any previous question
+            if not any(
+                suggestion_lower in prev_q or prev_q in suggestion_lower 
+                for prev_q in previous_questions
+            ):
+                filtered_suggestions.append(suggestion)
+        
+        return {"suggestions": filtered_suggestions}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
