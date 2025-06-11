@@ -29,15 +29,13 @@ const TypingIndicator: React.FC<{ isTyping: boolean; isDarkMode: boolean }> = ({
   const [currentWord, setCurrentWord] = useState(0);
   const words = [
     "Thinking",
-    "Retrieving",
+    "Retrieving Information",
     "Reasoning",
-    "Analyzing",
-    "Processing data",
     "Preparing response",
   ];
 
   useEffect(() => {
-    const getRandomInterval = () => Math.random() * (1500 - 500) + 500;
+    const getRandomInterval = () => Math.random() * (4000 - 2000) + 2000;
 
     const changeWord = () => {
       setCurrentWord((prev) => {
