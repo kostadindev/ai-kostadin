@@ -88,6 +88,14 @@ const TypingIndicator: React.FC<{ isTyping: boolean; isDarkMode: boolean }> = ({
             animationDelay: "0.4s",
           }}
         ></div>
+        <div
+          className={`w-[3px] h-[3px] rounded-full ${dotColor} animate-pulse`}
+          style={{
+            animationDuration: "2s",
+            animation: "customBounce 2s infinite, pulse 1.5s infinite",
+            animationDelay: "0.8s",
+          }}
+        ></div>
       </div>
     </div>
   );
