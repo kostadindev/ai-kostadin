@@ -14,7 +14,6 @@ const { Header } = Layout;
 // Feature flag for particles
 const ENABLE_PARTICLES = import.meta.env.VITE_ENABLE_PARTICLES === "true";
 const APP_NAME = import.meta.env.VITE_APP_NAME || "AI Kostadin";
-const API_URL = import.meta.env.VITE_API_URL;
 
 // Reusable particles component
 const ParticleBackground = ({ id }: { id: string }) => {
@@ -164,7 +163,7 @@ const ChatComponent: React.FC = () => {
           <div className="flex justify-between items-center w-full lg:max-w-4xl lg:px-4">
             <div style={logoStyle} className="goldman-bold lg:pl-4">
               <a
-                href={API_URL}
+                href="/"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
