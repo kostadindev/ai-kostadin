@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useEffect } from "react";
+import React, { useRef, useCallback, useEffect, useState } from "react";
 import { Card } from "antd";
 import { Message } from "../types/chat";
 import MarkdownRenderer from "./MarkdownRenderer";
@@ -14,10 +14,44 @@ interface MessageListProps {
 
 const primaryColor = "#e89a3c";
 
-const TypingIndicator: React.FC = () => {
+const TypingIndicator: React.FC<{ isTyping: boolean }> = ({ isTyping }) => {
+  const [currentWord, setCurrentWord] = useState(0);
+  const words = [
+    "Thinking",
+    "Retrieving",
+    "Reasoning",
+    "Analyzing",
+    "Processing data",
+    "Preparing response",
+  ];
+
+  useEffect(() => {
+    const getRandomInterval = () => Math.random() * (1500 - 500) + 500;
+
+    const changeWord = () => {
+      setCurrentWord((prev) => {
+        if (prev === words.length - 1) {
+          return prev; // Stay on Processing
+        }
+        return prev + 1;
+      });
+
+      // Schedule next change if not at the last word and still typing
+      if (currentWord < words.length - 1 && isTyping) {
+        setTimeout(changeWord, getRandomInterval());
+      }
+    };
+
+    // Start the sequence if typing
+    if (isTyping) {
+      const timeoutId = setTimeout(changeWord, getRandomInterval());
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentWord, words.length, isTyping]);
+
   return (
     <div className="flex items-baseline gap-0.5">
-      <span className="text-gray-400 animate-pulse">Thinking</span>
+      <span className="text-gray-400 animate-pulse">{words[currentWord]}</span>
       <div className="flex gap-0.5">
         <div
           className="w-[3px] h-[3px] rounded-full bg-gray-400 animate-pulse"
@@ -99,7 +133,7 @@ export const MessageList: React.FC<MessageListProps> = ({
               {msg.content ? (
                 <MarkdownRenderer content={msg.content} />
               ) : isTyping ? (
-                <TypingIndicator />
+                <TypingIndicator isTyping={isTyping} />
               ) : null}
             </Card>
           )}
