@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { Button, Input, Layout, theme } from "antd";
 import { SendOutlined, ReloadOutlined } from "@ant-design/icons";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
@@ -8,6 +8,7 @@ import { Suggestions } from "./Suggestions";
 import { Particles, initParticlesEngine } from "@tsparticles/react";
 import type { Engine } from "@tsparticles/engine";
 import { loadSlim } from "@tsparticles/slim";
+import type { MoveDirection, OutMode } from "@tsparticles/engine";
 
 const { Header } = Layout;
 
@@ -16,7 +17,7 @@ const ENABLE_PARTICLES = import.meta.env.VITE_ENABLE_PARTICLES === "true";
 const APP_NAME = import.meta.env.VITE_APP_NAME || "AI Kostadin";
 
 // Reusable particles component
-const ParticleBackground = ({ id }: { id: string }) => {
+const ParticleBackground = memo(({ id }: { id: string }) => {
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 1200,
     height: typeof window !== "undefined" ? window.innerHeight : 800,
@@ -34,57 +35,59 @@ const ParticleBackground = ({ id }: { id: string }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return (
-    <Particles
-      id={id}
-      options={{
-        fullScreen: {
-          enable: false,
+  const particlesOptions = useMemo(
+    () => ({
+      fullScreen: {
+        enable: false,
+      },
+      fpsLimit: 60,
+      particles: {
+        color: {
+          value: "#e89a3c",
         },
-        fpsLimit: 60,
-        particles: {
-          color: {
-            value: "#e89a3c",
-          },
-          links: {
-            color: "#e89a3c",
-            distance: windowSize.width < 480 ? 100 : 150,
-            enable: true,
-            opacity: 0.8,
-            width: 2,
-          },
-          move: {
-            enable: true,
-            speed: 2,
-            direction: "none",
-            random: false,
-            straight: false,
-            outModes: {
-              default: "bounce",
-              bottom: "bounce",
-              left: "bounce",
-              right: "bounce",
-              top: "bounce",
-            },
-          },
-          number: {
-            value: windowSize.width < 480 ? 24 : 100,
-            density: {
-              enable: false,
-            },
-          },
-          opacity: {
-            value: 1,
-          },
-          size: {
-            value: { min: 2, max: 5 },
+        links: {
+          color: "#e89a3c",
+          distance: windowSize.width < 480 ? 100 : 150,
+          enable: true,
+          opacity: 0.8,
+          width: 2,
+        },
+        move: {
+          enable: true,
+          speed: 2,
+          direction: "none" as MoveDirection,
+          random: false,
+          straight: false,
+          outModes: {
+            default: "bounce" as OutMode,
+            bottom: "bounce" as OutMode,
+            left: "bounce" as OutMode,
+            right: "bounce" as OutMode,
+            top: "bounce" as OutMode,
           },
         },
-        detectRetina: true,
-      }}
-    />
+        number: {
+          value: windowSize.width < 480 ? 24 : 100,
+          density: {
+            enable: false,
+          },
+        },
+        opacity: {
+          value: 1,
+        },
+        size: {
+          value: { min: 2, max: 5 },
+        },
+      },
+      detectRetina: true,
+    }),
+    [windowSize.width]
   );
-};
+
+  return <Particles id={id} options={particlesOptions} />;
+});
+
+ParticleBackground.displayName = "ParticleBackground";
 
 const ChatComponent: React.FC = () => {
   const { token } = theme.useToken();
