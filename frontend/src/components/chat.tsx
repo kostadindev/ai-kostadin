@@ -9,12 +9,9 @@ import { Particles, initParticlesEngine } from "@tsparticles/react";
 import type { Engine } from "@tsparticles/engine";
 import { loadSlim } from "@tsparticles/slim";
 import type { MoveDirection, OutMode } from "@tsparticles/engine";
+import { APP_CONFIG } from "../config/config";
 
 const { Header } = Layout;
-
-// Feature flag for particles
-const ENABLE_PARTICLES = import.meta.env.VITE_ENABLE_PARTICLES === "true";
-const APP_NAME = import.meta.env.VITE_APP_NAME || "AI Kostadin";
 
 // Reusable particles component
 const ParticleBackground = memo(({ id }: { id: string }) => {
@@ -98,11 +95,13 @@ const ChatComponent: React.FC = () => {
 
   // Initialize tsParticles
   useEffect(() => {
-    initParticlesEngine(async (engine: Engine) => {
-      await loadSlim(engine);
-    }).then(() => {
-      setInit(true);
-    });
+    if (APP_CONFIG.features.enableParticles) {
+      initParticlesEngine(async (engine: Engine) => {
+        await loadSlim(engine);
+      }).then(() => {
+        setInit(true);
+      });
+    }
   }, []);
 
   const {
@@ -176,7 +175,7 @@ const ChatComponent: React.FC = () => {
                 }}
                 className="hover:opacity-80"
               >
-                {APP_NAME}
+                {APP_CONFIG.name}
               </a>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -197,7 +196,7 @@ const ChatComponent: React.FC = () => {
       </Header>
 
       <div className="flex justify-center w-full h-full relative">
-        {ENABLE_PARTICLES && init && (
+        {APP_CONFIG.features.enableParticles && init && (
           <div className="hidden lg:block absolute inset-0 overflow-hidden">
             <ParticleBackground id="tsparticles-chat" />
           </div>
@@ -230,27 +229,29 @@ const ChatComponent: React.FC = () => {
                   onMessagesLoad={onMessagesLoad}
                 />
               </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: token.colorBorder,
-                  opacity: 0.12,
-                  pointerEvents: "none",
-                  zIndex: 0,
-                  maskImage: `url("data:image/svg+xml,%3Csvg width='104' height='240' viewBox='0 0 104 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='52,8 100,40 100,200 52,232 4,200 4,40' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E")`,
-                  WebkitMaskImage: `url("data:image/svg+xml,%3Csvg width='104' height='240' viewBox='0 0 104 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='52,8 100,40 100,200 52,232 4,200 4,40' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E")`,
-                  maskSize: "104px 240px",
-                  WebkitMaskSize: "104px 240px",
-                  maskRepeat: "repeat",
-                  WebkitMaskRepeat: "repeat",
-                  maskPosition: "0 0",
-                  WebkitMaskPosition: "0 0",
-                }}
-              />
+              {APP_CONFIG.features.enableHexagons && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: token.colorBorder,
+                    opacity: 0.12,
+                    pointerEvents: "none",
+                    zIndex: 0,
+                    maskImage: `url("data:image/svg+xml,%3Csvg width='104' height='240' viewBox='0 0 104 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='52,8 100,40 100,200 52,232 4,200 4,40' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E")`,
+                    WebkitMaskImage: `url("data:image/svg+xml,%3Csvg width='104' height='240' viewBox='0 0 104 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='52,8 100,40 100,200 52,232 4,200 4,40' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E")`,
+                    maskSize: "104px 240px",
+                    WebkitMaskSize: "104px 240px",
+                    maskRepeat: "repeat",
+                    WebkitMaskRepeat: "repeat",
+                    maskPosition: "0 0",
+                    WebkitMaskPosition: "0 0",
+                  }}
+                />
+              )}
             </div>
 
             <Suggestions

@@ -1,11 +1,12 @@
 import React from "react";
 import Markdown from "markdown-to-jsx";
 import { theme } from "antd";
+import styles from "./spin.module.css";
 
 // Custom components for Markdown elements
 const MarkdownComponents = {
   h1: ({ children }: { children: React.ReactNode }) => (
-    <h1 className="text-2xl font-bold mt-4 mb-2">{children}</h1>
+    <h1 className="text-xl font-bold mt-4 mb-2">{children}</h1>
   ),
   h2: ({ children }: { children: React.ReactNode }) => (
     <h2 className="text-xl font-semibold mt-3 mb-2">{children}</h2>
@@ -42,6 +43,18 @@ const MarkdownComponents = {
       {children}
     </a>
   ),
+  span: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => {
+    if (className === styles.spin) {
+      return <span className={styles.spin}>{children}</span>;
+    }
+    return <span>{children}</span>;
+  },
 };
 
 const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
@@ -50,14 +63,21 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
 
   const textColor = token.colorText; // Text color based on theme
 
+  // Process the content to replace @spin[] tags with HTML
+  const processedContent = content.replace(
+    /@spin\[(.*?)\]/g,
+    `<span class="${styles.spin}">$1</span>`
+  );
+
   return (
     <div style={{ color: textColor }}>
       <Markdown
         options={{
           overrides: MarkdownComponents,
+          forceBlock: true,
         }}
       >
-        {content}
+        {processedContent}
       </Markdown>
     </div>
   );

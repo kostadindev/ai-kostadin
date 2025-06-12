@@ -5,16 +5,14 @@ interface Props {
   onPromptSelect: (prompt: string) => void;
   isDarkMode: boolean;
   cardBackground: string;
+  prompts: readonly string[];
 }
 
-const prompts = [
-  "Current project?",
-  "What's Recursive QA?",
-  "Formal ML coursework?",
-  "Explain Deep Gestures",
-];
-
-const DefaultPrompts: React.FC<Props> = ({ onPromptSelect, isDarkMode }) => {
+const DefaultPrompts: React.FC<Props> = ({
+  onPromptSelect,
+  isDarkMode,
+  prompts,
+}) => {
   return (
     <div className="flex flex-col justify-end items-center text-center px-6 pb-8 max-w-3xl mx-auto h-full w-full">
       <div

@@ -3,7 +3,7 @@ import { Card } from "antd";
 import { Message } from "../types/chat";
 import MarkdownRenderer from "./MarkdownRenderer";
 import DefaultPrompts from "./DefaultPrompts";
-import styles from "./ChatDescription.module.css";
+import { APP_CONFIG } from "../config/config";
 
 const bounceKeyframes = `
   @keyframes customBounce {
@@ -11,39 +11,17 @@ const bounceKeyframes = `
     20% { transform: translateY(-2px); }
     40% { transform: translateY(0); }
   }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  .spinning-robot {
-    display: inline-block;
-    animation: spin 3s linear infinite;
-  }
 `;
 
 const ChatDescription: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
-  const textColor = isDarkMode ? "text-gray-300" : "text-gray-700";
   const cardBg = isDarkMode ? "#1f1f1f" : "#f0f2f5";
 
   return (
     <div className="flex flex-col items-center p-4">
       <Card className="max-w-2xl w-full" style={{ backgroundColor: cardBg }}>
-        <h2 className={`text-xl font-bold mb-2 ${textColor}`}>
-          Hi! I'm AI Kostadin <span className={styles.spinningRobot}>🤖</span>
-        </h2>
-        <p className={`text-sm mb-3 ${textColor}`}>
-          I'm here to chat about my work and expertise. Feel free to ask me
-          about:
-        </p>
-        <ul className={`list-disc pl-6 text-sm space-y-1 ${textColor}`}>
-          <li>My projects and technical experience</li>
-          <li>My work history and achievements</li>
-        </ul>
-        <p className={`text-sm mt-2 ${textColor}`}>
-          Try one of the suggested prompts below or ask me anything!
-        </p>
+        <div className="prose dark:prose-invert max-w-none">
+          <MarkdownRenderer content={APP_CONFIG.chatDescription} />
+        </div>
       </Card>
     </div>
   );
@@ -221,6 +199,7 @@ export const MessageList: React.FC<MessageListProps> = ({
             onPromptSelect={onPromptSelect}
             isDarkMode={isDarkMode}
             cardBackground={isDarkMode ? "#1f1f1f" : "#f0f2f5"}
+            prompts={APP_CONFIG.defaultPrompts}
           />
         </div>
       ) : (
