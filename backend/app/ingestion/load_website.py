@@ -2,28 +2,17 @@ import os
 import time
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pinecone import Pinecone, ServerlessSpec
 from langchain_huggingface import HuggingFaceEmbeddings
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Environment variables
-pinecone_api_key = os.getenv("PINECONE_API_KEY")
-pinecone_region = os.getenv("PINECONE_REGION", "us-east-1")
-pinecone_index_name = os.getenv("PINECONE_INDEX_NAME", "document-index")
+from app.config import settings
 
 # Initialize Pinecone
-pc = Pinecone(api_key=pinecone_api_key)
+pc = Pinecone(api_key=settings.PINECONE_API_KEY)
 
 # Initialize HuggingFace Embeddings using an open source model
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
-SITEMAP_URL = "https://kostadindev.github.io/sitemap.xml"
-
+embeddings = HuggingFaceEmbeddings(model_name=settings.EMBEDDING_MODEL)
 
 def get_urls_from_sitemap(sitemap_url):
     response = requests.get(sitemap_url)
@@ -31,7 +20,6 @@ def get_urls_from_sitemap(sitemap_url):
         raise Exception(f"Failed to load sitemap: {response.status_code}")
     soup = BeautifulSoup(response.text, "xml")
     return [loc.text for loc in soup.find_all("loc")]
-
 
 def download_and_clean_html(url):
     response = requests.get(url)
@@ -43,35 +31,32 @@ def download_and_clean_html(url):
         tag.decompose()
     return soup.get_text(separator="\n", strip=True)
 
-
 def split_into_chunks(text, source_url):
     document = Document(page_content=text, metadata={"source": source_url})
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=600,
-        chunk_overlap=50,
+        chunk_size=settings.CHUNK_SIZE,
+        chunk_overlap=settings.CHUNK_OVERLAP,
         separators=["\n\n", "\n", ".", " ", ""]
     )
     return splitter.split_documents([document])
 
-
 def embed_and_upload_to_pinecone(chunks):
     # Check if the index exists; if not, create it.
-    if pinecone_index_name not in pc.list_indexes().names():
-        print(f"Creating index: {pinecone_index_name}")
-        # For "all-MiniLM-L6-v2", the embedding dimension is 384.
+    if settings.PINECONE_API_INDEX not in pc.list_indexes().names():
+        print(f"Creating index: {settings.PINECONE_API_INDEX}")
         pc.create_index(
-            name=pinecone_index_name,
-            dimension=384,
+            name=settings.PINECONE_API_INDEX,
+            dimension=settings.EMBEDDING_DIMENSION,
             metric="cosine",
-            spec=ServerlessSpec(cloud="aws", region=pinecone_region)
+            spec=ServerlessSpec(cloud="aws", region=settings.PINECONE_API_REGION)
         )
         # Wait until index is ready
-        while not pc.describe_index(pinecone_index_name).status['ready']:
+        while not pc.describe_index(settings.PINECONE_API_INDEX).status['ready']:
             time.sleep(1)
     else:
-        print(f"Index {pinecone_index_name} already exists.")
+        print(f"Index {settings.PINECONE_API_INDEX} already exists.")
 
-    index = pc.Index(pinecone_index_name)
+    index = pc.Index(settings.PINECONE_API_INDEX)
 
     texts = [chunk.page_content for chunk in chunks]
     print("Embedding HTML text chunks using HuggingFace Embeddings...")
@@ -81,7 +66,7 @@ def embed_and_upload_to_pinecone(chunks):
         document_embeddings = embeddings.embed_documents(texts)
     except Exception as e:
         print(f"Embedding failed: {e}")
-        document_embeddings = [[0.0] * 384 for _ in texts]
+        document_embeddings = [[0.0] * settings.EMBEDDING_DIMENSION for _ in texts]
 
     vectors = [
         {
@@ -99,11 +84,10 @@ def embed_and_upload_to_pinecone(chunks):
     index.upsert(vectors=vectors, namespace="docs")
     print("✅ Upload complete!")
 
-
 def main():
-    print(f"Fetching sitemap: {SITEMAP_URL}")
+    print(f"Fetching sitemap: {settings.SITEMAP_URL}")
     try:
-        urls = get_urls_from_sitemap(SITEMAP_URL)
+        urls = get_urls_from_sitemap(settings.SITEMAP_URL)
         all_chunks = []
 
         for url in urls:
@@ -120,7 +104,6 @@ def main():
 
     except Exception as e:
         print(f"Error: {e}")
-
 
 if __name__ == "__main__":
     main()

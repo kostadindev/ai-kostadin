@@ -3,62 +3,29 @@ import time
 import requests
 import tempfile
 import hashlib
-from dotenv import load_dotenv
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pinecone import Pinecone, ServerlessSpec
 from langchain_huggingface import HuggingFaceEmbeddings
+from app.config import settings
 
-# === Load environment variables ===
-load_dotenv()
+# Initialize Pinecone
+pc = Pinecone(api_key=settings.PINECONE_API_KEY)
 
-pinecone_api_key = os.getenv("PINECONE_API_KEY")
-pinecone_region = os.getenv("PINECONE_REGION", "us-east-1")
-pinecone_index_name = os.getenv("PINECONE_INDEX_NAME", "document-index")
-github_token = os.getenv("GITHUB_API_KEY")
-github_username = os.getenv("GITHUB_USERNAME", "kostadindev")
+# Initialize HuggingFace Embeddings
+embeddings = HuggingFaceEmbeddings(model_name=settings.EMBEDDING_MODEL)
 
-headers = {"Authorization": f"token {github_token}"} if github_token else {}
+headers = {"Authorization": f"token {settings.GITHUB_API_KEY}"} if settings.GITHUB_API_KEY else {}
 
-# === Initialize Pinecone ===
-pc = Pinecone(api_key=pinecone_api_key)
-
-# Create the index only if it doesn't already exist (for "all-MiniLM-L6-v2", dimension is 384)
-if pinecone_index_name not in pc.list_indexes().names():
-    print(f"Creating index: {pinecone_index_name}")
-    pc.create_index(
-        name=pinecone_index_name,
-        dimension=384,
-        metric="cosine",
-        spec=ServerlessSpec(cloud="aws", region=pinecone_region)
-    )
-# Get the index
-index = pc.Index(pinecone_index_name)
-
-# === Initialize HuggingFace Embeddings ===
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
-
-def get_user_repos():
-    repos = []
-    page = 1
-    while True:
-        url = f"https://api.github.com/users/{github_username}/repos?per_page=100&page={page}"
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            raise Exception(
-                f"GitHub API error: {response.status_code} - {response.text}")
-        data = response.json()
-        if not data:
-            break
-        repos.extend(data)
-        page += 1
-    return [repo['name'] for repo in repos]
-
-
-def get_repo_files(repo):
+def get_repo_files(repo_url):
+    # Extract username and repo from the URL
+    parts = repo_url.strip('/').split('/')
+    if len(parts) < 2:
+        raise ValueError(f"Invalid GitHub URL: {repo_url}")
+    username, repo = parts[-2], parts[-1]
+    
     def fetch_files_recursively(path=""):
-        url = f"https://api.github.com/repos/{github_username}/{repo}/contents/{path}"
+        url = f"https://api.github.com/repos/{username}/{repo}/contents/{path}"
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             return []
@@ -72,16 +39,13 @@ def get_repo_files(repo):
         return files
     return fetch_files_recursively()
 
-
 def get_all_markdown_urls():
-    repos = get_user_repos()
     all_md_urls = []
-    for repo in repos:
-        print(f"🔍 Scanning repo: {repo}")
-        md_files = get_repo_files(repo)
+    for repo_url in settings.GITHUB_REPOSITORIES:
+        print(f"🔍 Scanning repo: {repo_url}")
+        md_files = get_repo_files(repo_url)
         all_md_urls.extend(md_files)
     return all_md_urls
-
 
 def download_markdown(url):
     response = requests.get(url)
@@ -94,7 +58,6 @@ def download_markdown(url):
     temp_file.close()
     return temp_file.name
 
-
 def extract_documents_from_markdown(md_path, source_url):
     with open(md_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -102,13 +65,12 @@ def extract_documents_from_markdown(md_path, source_url):
     doc = Document(page_content=content, metadata={"source": source_url})
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=300,
-        chunk_overlap=50,
+        chunk_size=settings.CHUNK_SIZE,
+        chunk_overlap=settings.CHUNK_OVERLAP,
         separators=["\n\n", "\n", ".", " ", ""]
     )
 
     return splitter.split_documents([doc])
-
 
 def embed_and_upload_to_pinecone(chunks):
     if not chunks:
@@ -133,7 +95,7 @@ def embed_and_upload_to_pinecone(chunks):
         document_embeddings = embeddings.embed_documents(texts)
     except Exception as e:
         print(f"❌ HuggingFace embedding failed: {e}")
-        document_embeddings = [[0.0] * 384 for _ in texts]
+        document_embeddings = [[0.0] * settings.EMBEDDING_DIMENSION for _ in texts]
 
     vectors = []
     for i, (chunk, embedding) in enumerate(zip(chunks, document_embeddings)):
@@ -149,9 +111,9 @@ def embed_and_upload_to_pinecone(chunks):
 
     print(
         f"\n📤 Upserting {len(vectors)} vectors into Pinecone (namespace='docs')...")
+    index = pc.Index(settings.PINECONE_API_INDEX)
     index.upsert(vectors=vectors, namespace="docs")
     print("✅ Upload complete!")
-
 
 def main():
     print("📡 Fetching markdown URLs from GitHub...")
@@ -172,7 +134,6 @@ def main():
 
     print(f"\n🧩 Total Chunks Created: {len(all_chunks)}")
     embed_and_upload_to_pinecone(all_chunks)
-
 
 if __name__ == "__main__":
     main()

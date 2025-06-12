@@ -2,7 +2,7 @@
 Configuration management for the application.
 Centralizes all environment variables and settings in one place.
 """
-from typing import Optional
+from typing import Optional, List
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from dotenv import load_dotenv
@@ -41,6 +41,36 @@ class Settings(BaseSettings):
         ),
         description="Default system prompt for AI assistant"
     )
+
+    # Ingestion Configuration
+    FILES: List[str] = Field(
+        default=[
+            # PDF documents - remote
+            "https://kostadindev.github.io/static/documents/cv.pdf",
+            "https://kostadindev.github.io/static/documents/sbu_transcript.pdf",
+            "https://kostadindev.github.io/static/documents/uhh_transcript.pdf",
+            "C:/Users/kosta/OneDrive/Desktop/MS Application Materials/emf-ellipse-publication.pdf",
+        ],
+        description="List of files to process (remote URLs or local file paths)"
+    )
+    SITEMAP_URL: str = Field(default="https://kostadindev.github.io/sitemap.xml", description="URL of the sitemap to crawl")
+    GITHUB_REPOSITORIES: List[str] = Field(
+        default=[
+            "https://github.com/kostadindev/Knowledge-Base-Builder",
+            "https://github.com/kostadindev/GONEXT",
+            "https://github.com/kostadindev/GONEXT-ML",
+            "https://github.com/kostadindev/ai-kostadin",
+            "https://github.com/kostadindev/Recursive-QA",
+            "https://github.com/kostadindev/deep-gestures",
+            "https://github.com/kostadindev/emf-ellipse"
+        ],
+        description="List of GitHub repositories to process (format: username/repo or full URL)"
+    )
+    
+    # Text Processing Configuration
+    CHUNK_SIZE: int = Field(default=600, description="Size of text chunks for splitting documents")
+    CHUNK_OVERLAP: int = Field(default=50, description="Overlap between text chunks")
+    EMBEDDING_DIMENSION: int = Field(default=384, description="Dimension of embeddings (for all-MiniLM-L6-v2)")
 
     class Config:
         env_file = ".env"
