@@ -3,7 +3,7 @@ import { Card } from "antd";
 import { Message } from "../types/chat";
 import MarkdownRenderer from "./MarkdownRenderer";
 import DefaultPrompts from "./DefaultPrompts";
-import { APP_CONFIG } from "../config/config";
+import { UI_CONFIG, DEFAULT_PROMPTS } from "../config/config";
 
 const bounceKeyframes = `
   @keyframes customBounce {
@@ -13,14 +13,19 @@ const bounceKeyframes = `
   }
 `;
 
-const ChatDescription: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
+const ChatDescription: React.FC<{
+  isDarkMode: boolean;
+  description?: string;
+}> = ({ isDarkMode, description }) => {
   const cardBg = isDarkMode ? "#1f1f1f" : "#f0f2f5";
+
+  if (!description) return null;
 
   return (
     <div className="flex flex-col items-center p-4">
       <Card className="max-w-2xl w-full" style={{ backgroundColor: cardBg }}>
         <div className="prose dark:prose-invert max-w-none">
-          <MarkdownRenderer content={APP_CONFIG.chatDescription} />
+          <MarkdownRenderer content={description} />
         </div>
       </Card>
     </div>
@@ -34,6 +39,7 @@ interface MessageListProps {
   onScroll: (isUserScrolling: boolean) => void;
   isTyping?: boolean;
   onMessagesLoad?: (messages: Message[]) => void;
+  chatDescription?: string;
 }
 
 const primaryColor = "#e89a3c";
@@ -124,6 +130,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   onScroll,
   isTyping = false,
   onMessagesLoad,
+  chatDescription,
 }) => {
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -194,12 +201,15 @@ export const MessageList: React.FC<MessageListProps> = ({
     >
       {messages.length === 0 ? (
         <div className="flex flex-col gap-4">
-          <ChatDescription isDarkMode={isDarkMode} />
+          <ChatDescription
+            isDarkMode={isDarkMode}
+            description={chatDescription}
+          />
           <DefaultPrompts
             onPromptSelect={onPromptSelect}
             isDarkMode={isDarkMode}
             cardBackground={isDarkMode ? "#1f1f1f" : "#f0f2f5"}
-            prompts={APP_CONFIG.defaultPrompts}
+            prompts={UI_CONFIG.defaultPrompts ?? DEFAULT_PROMPTS}
           />
         </div>
       ) : (

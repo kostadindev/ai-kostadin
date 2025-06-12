@@ -21,6 +21,124 @@ A modern React application built with TypeScript, Vite, and Ant Design. This fro
 - **Markdown**: markdown-to-jsx
 - **Development**: ESLint, TypeScript
 
+## ⚙️ Configuration
+
+The application can be configured through `src/config/config.ts`. All fields are optional and will fall back to default values if not specified.
+
+```typescript
+export const UI_CONFIG = {
+  // The name displayed in the header
+  // Default: "AI Assistant"
+  name?: string;
+  
+  // Placeholder text for the input field
+  // Default: "Ask me anything..."
+  inputPlaceholder?: string;
+  
+  // Maximum length for user input messages
+  // Default: 256
+  maxInputLength?: number;
+  
+  // Default prompt suggestions shown to users
+  // These appear as clickable buttons below the chat
+  // Default: ["Tell me about yourself", "What can you do?"]
+  defaultPrompts?: string[];
+  
+  // Welcome message shown in markdown format
+  // Supports markdown syntax and @spin[emoji] for animated emojis
+  // Default: A simple welcome message
+  chatDescription?: string;
+  
+  // Feature flags to control UI elements
+  features?: {
+    // Enable/disable particle background effect
+    // Creates an interactive particle network in the background
+    // Default: true
+    enableParticles?: boolean;
+    
+    // Enable/disable hexagon pattern background
+    // Adds a subtle hexagonal pattern overlay
+    // Default: true
+    enableHexagons?: boolean;
+  }
+}
+```
+
+### Default Configuration
+
+If you don't specify any configuration, the application will use these default values:
+
+```typescript
+const DEFAULT_CONFIG = {
+  name: "AI Assistant",
+  inputPlaceholder: "Ask me anything...",
+  maxInputLength: 256,
+  defaultPrompts: [
+    "Tell me about yourself",
+    "What can you do?"
+  ],
+  chatDescription: `
+# Welcome! 👋
+
+I'm your AI assistant. Feel free to ask me anything!
+
+* Try the suggested prompts below
+* Ask your own questions
+* I'm here to help!
+  `.trim(),
+  features: {
+    enableParticles: true,
+    enableHexagons: true
+  }
+}
+```
+
+### Customizing the Chat
+
+1. **Name and Branding**
+   - `name`: Customize the header text (optional)
+   - `inputPlaceholder`: Change the input field placeholder (optional)
+
+2. **Default Prompts**
+   - `defaultPrompts`: Array of suggested questions (optional)
+   - Each prompt should be concise and engaging
+   - These appear as clickable buttons below the chat
+
+3. **Welcome Message**
+   - `chatDescription`: Markdown-formatted welcome message (optional)
+   - Supports all markdown features (headings, lists, links, etc.)
+   - Use `@spin[emoji]` for animated emojis
+   - Example:
+     ```markdown
+     # Welcome! @spin[👋]
+     
+     * Point 1
+     * Point 2
+     
+     > Custom quote
+     ```
+
+4. **Visual Features**
+   - `features.enableParticles`: Toggle particle background (optional)
+   - `features.enableHexagons`: Toggle hexagon pattern (optional)
+   - Both default to true if not specified
+
+### Example Configuration
+
+Here's a minimal configuration example:
+
+```typescript
+export const UI_CONFIG = {
+  name: "My AI Assistant",
+  defaultPrompts: [
+    "What's your favorite color?",
+    "Tell me a joke"
+  ]
+} as const;
+```
+
+All other fields will use their default values.
+
 ## 📦 Installation
 
 1. Clone the repository

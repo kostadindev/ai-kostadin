@@ -9,7 +9,12 @@ import { Particles, initParticlesEngine } from "@tsparticles/react";
 import type { Engine } from "@tsparticles/engine";
 import { loadSlim } from "@tsparticles/slim";
 import type { MoveDirection, OutMode } from "@tsparticles/engine";
-import { APP_CONFIG } from "../config/config";
+import {
+  UI_CONFIG,
+  DEFAULT_NAME,
+  DEFAULT_INPUT_PLACEHOLDER,
+  DEFAULT_MAX_INPUT_LENGTH,
+} from "../config/config";
 
 const { Header } = Layout;
 
@@ -95,7 +100,7 @@ const ChatComponent: React.FC = () => {
 
   // Initialize tsParticles
   useEffect(() => {
-    if (APP_CONFIG.features.enableParticles) {
+    if (UI_CONFIG?.features?.enableParticles) {
       initParticlesEngine(async (engine: Engine) => {
         await loadSlim(engine);
       }).then(() => {
@@ -175,7 +180,7 @@ const ChatComponent: React.FC = () => {
                 }}
                 className="hover:opacity-80"
               >
-                {APP_CONFIG.name}
+                {UI_CONFIG.name ?? DEFAULT_NAME}
               </a>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -196,7 +201,7 @@ const ChatComponent: React.FC = () => {
       </Header>
 
       <div className="flex justify-center w-full h-full relative">
-        {APP_CONFIG.features.enableParticles && init && (
+        {UI_CONFIG?.features?.enableParticles && init && (
           <div className="hidden lg:block absolute inset-0 overflow-hidden">
             <ParticleBackground id="tsparticles-chat" />
           </div>
@@ -227,9 +232,10 @@ const ChatComponent: React.FC = () => {
                   onScroll={() => {}}
                   isTyping={isTyping}
                   onMessagesLoad={onMessagesLoad}
+                  chatDescription={UI_CONFIG.chatDescription}
                 />
               </div>
-              {APP_CONFIG.features.enableHexagons && (
+              {UI_CONFIG?.features?.enableHexagons && (
                 <div
                   style={{
                     position: "absolute",
@@ -273,9 +279,13 @@ const ChatComponent: React.FC = () => {
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyPress}
-                  placeholder="Ask about Kostadin's work"
+                  placeholder={
+                    UI_CONFIG.inputPlaceholder ?? DEFAULT_INPUT_PLACEHOLDER
+                  }
                   style={{ fontSize: "16px" }}
-                  maxLength={256}
+                  maxLength={
+                    UI_CONFIG.maxInputLength ?? DEFAULT_MAX_INPUT_LENGTH
+                  }
                   disabled={isSending}
                   className="flex-1"
                 />
