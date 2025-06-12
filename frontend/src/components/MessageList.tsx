@@ -3,6 +3,7 @@ import { Card } from "antd";
 import { Message } from "../types/chat";
 import MarkdownRenderer from "./MarkdownRenderer";
 import DefaultPrompts from "./DefaultPrompts";
+import styles from "./ChatDescription.module.css";
 
 const bounceKeyframes = `
   @keyframes customBounce {
@@ -10,7 +11,43 @@ const bounceKeyframes = `
     20% { transform: translateY(-2px); }
     40% { transform: translateY(0); }
   }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .spinning-robot {
+    display: inline-block;
+    animation: spin 3s linear infinite;
+  }
 `;
+
+const ChatDescription: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
+  const textColor = isDarkMode ? "text-gray-300" : "text-gray-700";
+  const cardBg = isDarkMode ? "#1f1f1f" : "#f0f2f5";
+
+  return (
+    <div className="flex flex-col items-center p-4">
+      <Card className="max-w-2xl w-full" style={{ backgroundColor: cardBg }}>
+        <h2 className={`text-xl font-bold mb-2 ${textColor}`}>
+          Hi! I'm AI Kostadin <span className={styles.spinningRobot}>🤖</span>
+        </h2>
+        <p className={`text-sm mb-3 ${textColor}`}>
+          I'm here to chat about my work and expertise. Feel free to ask me
+          about:
+        </p>
+        <ul className={`list-disc pl-6 text-sm space-y-1 ${textColor}`}>
+          <li>My projects and technical experience</li>
+          <li>My work history and achievements</li>
+        </ul>
+        <p className={`text-sm mt-2 ${textColor}`}>
+          Try one of the suggested prompts below or ask me anything!
+        </p>
+      </Card>
+    </div>
+  );
+};
 
 interface MessageListProps {
   messages: Message[];
@@ -173,46 +210,52 @@ export const MessageList: React.FC<MessageListProps> = ({
 
   return (
     <div
-      className="h-full overflow-auto p-4"
+      className="h-full overflow-auto p-4 flex flex-col justify-end"
       ref={messageContainerRef}
       onScroll={handleScroll}
     >
-      {messages.length === 0 && (
-        <DefaultPrompts
-          onPromptSelect={onPromptSelect}
-          isDarkMode={isDarkMode}
-          cardBackground={isDarkMode ? "#1f1f1f" : "#f0f2f5"}
-        />
-      )}
-
-      {messages.map((msg, index) => (
-        <div key={index} className="my-2 pb-1">
-          {msg.role === "user" ? (
-            <div
-              className="inline-block p-2 px-4 break-words rounded-lg text-white"
-              style={{
-                backgroundColor: primaryColor,
-                maxWidth: "85%",
-              }}
-            >
-              {msg.content}
-            </div>
-          ) : (
-            <Card
-              className="inline-block rounded-lg shadow-md text-black w-full break-words"
-              style={{
-                backgroundColor: isDarkMode ? "#1f1f1f" : "#f0f2f5",
-              }}
-            >
-              {msg.content ? (
-                <MarkdownRenderer content={msg.content} />
-              ) : isTyping ? (
-                <TypingIndicator isTyping={isTyping} isDarkMode={isDarkMode} />
-              ) : null}
-            </Card>
-          )}
+      {messages.length === 0 ? (
+        <div className="flex flex-col gap-4">
+          <ChatDescription isDarkMode={isDarkMode} />
+          <DefaultPrompts
+            onPromptSelect={onPromptSelect}
+            isDarkMode={isDarkMode}
+            cardBackground={isDarkMode ? "#1f1f1f" : "#f0f2f5"}
+          />
         </div>
-      ))}
+      ) : (
+        messages.map((msg, index) => (
+          <div key={index} className="my-2 pb-1">
+            {msg.role === "user" ? (
+              <div
+                className="inline-block p-2 px-4 break-words rounded-lg text-white"
+                style={{
+                  backgroundColor: primaryColor,
+                  maxWidth: "85%",
+                }}
+              >
+                {msg.content}
+              </div>
+            ) : (
+              <Card
+                className="inline-block rounded-lg shadow-md text-black w-full break-words"
+                style={{
+                  backgroundColor: isDarkMode ? "#1f1f1f" : "#f0f2f5",
+                }}
+              >
+                {msg.content ? (
+                  <MarkdownRenderer content={msg.content} />
+                ) : isTyping ? (
+                  <TypingIndicator
+                    isTyping={isTyping}
+                    isDarkMode={isDarkMode}
+                  />
+                ) : null}
+              </Card>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 };
