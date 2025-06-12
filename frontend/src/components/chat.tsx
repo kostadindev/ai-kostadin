@@ -275,7 +275,7 @@ const ChatComponent: React.FC = () => {
 
               <div className="w-full">
                 <div
-                  className="p-2 pr-6 border-t flex items-center gap-3"
+                  className="p-2 pr-5 border-t flex items-center gap-3"
                   style={{
                     backgroundColor: token.colorBgContainer,
                     borderColor: token.colorBorder,

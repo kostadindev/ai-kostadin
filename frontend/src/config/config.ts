@@ -36,7 +36,7 @@ export const UI_CONFIG: Config = {
     "Explain Deep Gestures",
   ],
   chatDescription: `
-# Hi! I'm AI Kostadin @spin[🤖]
+## Hi! I'm AI Kostadin @spin[🤖]
 
 I'm here to chat about my work and expertise. Feel free to ask me about:
 
