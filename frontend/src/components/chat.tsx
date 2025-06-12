@@ -146,8 +146,6 @@ const ChatComponent: React.FC = () => {
     justifyContent: "space-between",
     boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     padding: "0 20px",
-    position: "relative",
-    zIndex: 10,
   };
 
   const logoStyle: React.CSSProperties = {
@@ -165,7 +163,9 @@ const ChatComponent: React.FC = () => {
       className="flex flex-col h-screen w-full transition-colors duration-200"
       style={{ backgroundColor: token.colorBgLayout }}
     >
-      <Header style={headerStyle}>
+      <Header
+        style={{ ...headerStyle, position: "sticky", top: 0, zIndex: 1000 }}
+      >
         <div className="flex justify-center w-full">
           <div className="flex justify-between items-center w-full lg:max-w-4xl lg:px-4">
             <div style={logoStyle} className="goldman-bold lg:pl-4">
@@ -200,21 +200,22 @@ const ChatComponent: React.FC = () => {
         </div>
       </Header>
 
-      <div className="flex justify-center w-full h-full relative">
+      <div className="flex justify-center w-full flex-1 relative">
         {UI_CONFIG?.features?.enableParticles && init && (
           <div className="hidden lg:block absolute inset-0 overflow-hidden">
             <ParticleBackground id="tsparticles-chat" />
           </div>
         )}
-        <div className="flex flex-col w-full lg:max-w-4xl lg:px-4 relative z-10">
-          <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col w-full lg:max-w-4xl lg:px-4 relative z-10 h-full">
+          <div className="flex flex-col h-full">
             <div
-              className="flex-1 overflow-hidden transition-shadow duration-200 shadow-sm lg:shadow-md"
+              className="flex-1 transition-shadow duration-200 shadow-sm lg:shadow-md"
               style={{
                 backgroundColor: token.colorBgContainer,
                 border: `1px solid ${token.colorBorder}`,
                 borderRadius: token.borderRadius,
                 position: "relative",
+                minHeight: 0, // Important for flex child to shrink
               }}
             >
               <div
@@ -223,6 +224,8 @@ const ChatComponent: React.FC = () => {
                   zIndex: 1,
                   height: "100%",
                   backgroundColor: "transparent",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
                 <MessageList
@@ -260,40 +263,45 @@ const ChatComponent: React.FC = () => {
               )}
             </div>
 
-            <Suggestions
-              suggestions={suggestions}
-              isDarkMode={isDarkMode}
-              onSuggestionClick={sendMessage}
-            />
+            <div
+              className="sticky bottom-0 w-full z-20"
+              style={{ backgroundColor: token.colorBgLayout }}
+            >
+              <Suggestions
+                suggestions={suggestions}
+                isDarkMode={isDarkMode}
+                onSuggestionClick={sendMessage}
+              />
 
-            <div className="sticky bottom-0 w-full">
-              <div
-                className="p-2 border-t flex items-center gap-3"
-                style={{
-                  backgroundColor: token.colorBgContainer,
-                  borderColor: token.colorBorder,
-                }}
-              >
-                <Input.TextArea
-                  autoSize
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyPress}
-                  placeholder={
-                    UI_CONFIG.inputPlaceholder ?? DEFAULT_INPUT_PLACEHOLDER
-                  }
-                  style={{ fontSize: "16px" }}
-                  maxLength={
-                    UI_CONFIG.maxInputLength ?? DEFAULT_MAX_INPUT_LENGTH
-                  }
-                  disabled={isSending}
-                  className="flex-1"
-                />
-                <Button
-                  icon={<SendOutlined />}
-                  onClick={() => sendMessage(input)}
-                  disabled={isSending}
-                />
+              <div className="w-full">
+                <div
+                  className="p-2 pr-6 border-t flex items-center gap-3"
+                  style={{
+                    backgroundColor: token.colorBgContainer,
+                    borderColor: token.colorBorder,
+                  }}
+                >
+                  <Input.TextArea
+                    autoSize
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyPress}
+                    placeholder={
+                      UI_CONFIG.inputPlaceholder ?? DEFAULT_INPUT_PLACEHOLDER
+                    }
+                    style={{ fontSize: "16px" }}
+                    maxLength={
+                      UI_CONFIG.maxInputLength ?? DEFAULT_MAX_INPUT_LENGTH
+                    }
+                    disabled={isSending}
+                    className="flex-1"
+                  />
+                  <Button
+                    icon={<SendOutlined />}
+                    onClick={() => sendMessage(input)}
+                    disabled={isSending}
+                  />
+                </div>
               </div>
             </div>
           </div>

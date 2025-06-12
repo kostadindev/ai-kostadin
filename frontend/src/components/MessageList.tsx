@@ -195,55 +195,60 @@ export const MessageList: React.FC<MessageListProps> = ({
 
   return (
     <div
-      className="h-full overflow-auto p-4 flex flex-col justify-end"
+      className="flex-1 overflow-auto p-4 pb-4 pr-6 flex flex-col"
       ref={messageContainerRef}
       onScroll={handleScroll}
+      style={{ minHeight: 0 }}
     >
       {messages.length === 0 ? (
-        <div className="flex flex-col gap-4">
-          <ChatDescription
-            isDarkMode={isDarkMode}
-            description={chatDescription}
-          />
-          <DefaultPrompts
-            onPromptSelect={onPromptSelect}
-            isDarkMode={isDarkMode}
-            cardBackground={isDarkMode ? "#1f1f1f" : "#f0f2f5"}
-            prompts={UI_CONFIG.defaultPrompts ?? DEFAULT_PROMPTS}
-          />
+        <div className="flex-1 flex flex-col justify-center">
+          <div className="flex flex-col gap-4">
+            <ChatDescription
+              isDarkMode={isDarkMode}
+              description={chatDescription}
+            />
+            <DefaultPrompts
+              onPromptSelect={onPromptSelect}
+              isDarkMode={isDarkMode}
+              cardBackground={isDarkMode ? "#1f1f1f" : "#f0f2f5"}
+              prompts={UI_CONFIG.defaultPrompts ?? DEFAULT_PROMPTS}
+            />
+          </div>
         </div>
       ) : (
-        messages.map((msg, index) => (
-          <div key={index} className="my-2 pb-1">
-            {msg.role === "user" ? (
-              <div
-                className="inline-block p-2 px-4 break-words rounded-lg text-white"
-                style={{
-                  backgroundColor: primaryColor,
-                  maxWidth: "85%",
-                }}
-              >
-                {msg.content}
-              </div>
-            ) : (
-              <Card
-                className="inline-block rounded-lg shadow-md text-black w-full break-words"
-                style={{
-                  backgroundColor: isDarkMode ? "#1f1f1f" : "#f0f2f5",
-                }}
-              >
-                {msg.content ? (
-                  <MarkdownRenderer content={msg.content} />
-                ) : isTyping ? (
-                  <TypingIndicator
-                    isTyping={isTyping}
-                    isDarkMode={isDarkMode}
-                  />
-                ) : null}
-              </Card>
-            )}
-          </div>
-        ))
+        <div className="flex flex-col">
+          {messages.map((msg, index) => (
+            <div key={index} className="my-2 pb-1">
+              {msg.role === "user" ? (
+                <div
+                  className="inline-block p-2 px-4 break-words rounded-lg text-white"
+                  style={{
+                    backgroundColor: primaryColor,
+                    maxWidth: "85%",
+                  }}
+                >
+                  {msg.content}
+                </div>
+              ) : (
+                <Card
+                  className="inline-block rounded-lg shadow-md text-black w-full break-words"
+                  style={{
+                    backgroundColor: isDarkMode ? "#1f1f1f" : "#f0f2f5",
+                  }}
+                >
+                  {msg.content ? (
+                    <MarkdownRenderer content={msg.content} />
+                  ) : isTyping ? (
+                    <TypingIndicator
+                      isTyping={isTyping}
+                      isDarkMode={isDarkMode}
+                    />
+                  ) : null}
+                </Card>
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
