@@ -160,8 +160,12 @@ const ChatComponent: React.FC = () => {
 
   return (
     <div
-      className="flex flex-col h-screen w-full transition-colors duration-200"
-      style={{ backgroundColor: token.colorBgLayout }}
+      className="flex flex-col w-full transition-colors duration-200"
+      style={{
+        backgroundColor: token.colorBgLayout,
+        height: "100vh",
+        minHeight: 0,
+      }}
     >
       <Header
         style={{ ...headerStyle, position: "sticky", top: 0, zIndex: 1000 }}
@@ -200,14 +204,20 @@ const ChatComponent: React.FC = () => {
         </div>
       </Header>
 
-      <div className="flex justify-center w-full flex-1 relative">
+      <div
+        className="flex justify-center w-full flex-1 relative"
+        style={{ minHeight: 0 }}
+      >
         {UI_CONFIG?.features?.enableParticles && init && (
           <div className="hidden lg:block absolute inset-0 overflow-hidden">
             <ParticleBackground id="tsparticles-chat" />
           </div>
         )}
-        <div className="flex flex-col w-full lg:max-w-4xl lg:px-4 relative z-10 h-full">
-          <div className="flex flex-col h-full">
+        <div
+          className="flex flex-col w-full lg:max-w-4xl lg:px-4 relative z-10 h-full"
+          style={{ minHeight: 0 }}
+        >
+          <div className="flex flex-col h-full" style={{ minHeight: 0 }}>
             <div
               className="flex-1 transition-shadow duration-200 shadow-sm lg:shadow-md"
               style={{
@@ -216,16 +226,23 @@ const ChatComponent: React.FC = () => {
                 borderRadius: token.borderRadius,
                 position: "relative",
                 minHeight: 0, // Important for flex child to shrink
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                height: "100%", // Ensure it fills available space
               }}
             >
               <div
                 style={{
                   position: "relative",
                   zIndex: 1,
-                  height: "100%",
                   backgroundColor: "transparent",
                   display: "flex",
                   flexDirection: "column",
+                  flex: 1, // Take up all available space
+                  overflow: "auto", // Enable scrolling within this container
+                  minHeight: 0, // Allow shrinking
+                  height: "100%", // Fill parent
                 }}
               >
                 <MessageList
@@ -275,7 +292,7 @@ const ChatComponent: React.FC = () => {
 
               <div className="w-full">
                 <div
-                  className="p-2 pr-5 border-t flex items-center gap-3"
+                  className="p-2 pr-4 border-t flex items-center gap-3"
                   style={{
                     backgroundColor: token.colorBgContainer,
                     borderColor: token.colorBorder,
