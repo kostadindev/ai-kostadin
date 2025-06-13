@@ -202,7 +202,7 @@ export const MessageList: React.FC<MessageListProps> = ({
     >
       {messages.length === 0 ? (
         <div className="flex-1 flex flex-col justify-end">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-8">
             <ChatDescription
               isDarkMode={isDarkMode}
               description={chatDescription}
@@ -218,7 +218,7 @@ export const MessageList: React.FC<MessageListProps> = ({
       ) : (
         <div className="flex flex-col">
           {messages.map((msg, index) => (
-            <div key={index} className="my-1 pb-0.5">
+            <div key={index} className="my-2 mx-2 pb-1">
               {msg.role === "user" ? (
                 <div
                   className="inline-block p-2 px-4 break-words rounded-lg text-white"
