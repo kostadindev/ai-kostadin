@@ -14,7 +14,7 @@ const DefaultPrompts: React.FC<Props> = ({
   prompts,
 }) => {
   return (
-    <div className="flex flex-col justify-end items-center text-center px-6 pb-8 max-w-3xl mx-auto h-full w-full">
+    <div className="flex flex-col justify-end items-center text-center px-6 pb-4 max-w-3xl mx-auto h-full w-full">
       <div
         className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full"
         style={{ marginTop: "auto" }}

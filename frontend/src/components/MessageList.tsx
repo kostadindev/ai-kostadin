@@ -22,7 +22,7 @@ const ChatDescription: React.FC<{
   if (!description) return null;
 
   return (
-    <div className="flex flex-col items-center p-4">
+    <div className="flex flex-col items-center p-2">
       <Card className="max-w-2xl w-full" style={{ backgroundColor: cardBg }}>
         <div className="prose dark:prose-invert max-w-none">
           <MarkdownRenderer content={description} />
@@ -195,14 +195,14 @@ export const MessageList: React.FC<MessageListProps> = ({
 
   return (
     <div
-      className="flex-1 overflow-auto p-4 pb-4 pr-4 flex flex-col"
+      className="flex-1 overflow-auto p-2 pb-2 pr-2 flex flex-col"
       ref={messageContainerRef}
       onScroll={handleScroll}
       style={{ minHeight: 0 }}
     >
       {messages.length === 0 ? (
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="flex flex-col gap-4">
+        <div className="flex-1 flex flex-col justify-end">
+          <div className="flex flex-col gap-2">
             <ChatDescription
               isDarkMode={isDarkMode}
               description={chatDescription}
@@ -218,7 +218,7 @@ export const MessageList: React.FC<MessageListProps> = ({
       ) : (
         <div className="flex flex-col">
           {messages.map((msg, index) => (
-            <div key={index} className="my-2 pb-1">
+            <div key={index} className="my-1 pb-0.5">
               {msg.role === "user" ? (
                 <div
                   className="inline-block p-2 px-4 break-words rounded-lg text-white"
