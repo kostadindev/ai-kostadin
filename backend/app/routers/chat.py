@@ -131,14 +131,15 @@ async def suggest_followups(query: QueryHistory):
             "Look for domain-specific terms, acronyms, or specialized vocabulary that might need explanation. "
             "IMPORTANT: Do not suggest questions that have already been asked in the conversation. "
             "Keep questions under 5 words each. If there are no new technical terms, unique terminology, or "
-            "unique aspects to explore, respond with 'NO_FOLLOWUP'. Be specific and avoid generic questions."
+            "unique aspects to explore, respond with 'NO_FOLLOWUP'. Answer in a simple string. "
+            "Be specific and avoid generic questions."
         ))
         response = gemini_service.generate_response(messages)
         
         if "NO_FOLLOWUP" in response.upper():
             return {"suggestions": []}
             
-        suggestions = [s.strip() for s in response.strip().split("\n") if s.strip()]
+        suggestions = [s.strip() for s in response.strip().split("\n") if s.strip()][:2]
         cleaned = [s.lstrip("1234567890.-) ").strip() for s in suggestions if s.strip()]
         
         # Filter out suggestions that are too similar to previous questions
