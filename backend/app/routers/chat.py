@@ -40,6 +40,7 @@ def retrieve(state: State) -> dict:
     Returns:
         Dictionary containing the retrieved context.
     """
+    print("[CHAT] Step: Retrieval started.")
     # Get the current question from the history
     current_question = None
     for msg in reversed(state["history"]):
@@ -53,7 +54,7 @@ def retrieve(state: State) -> dict:
     query_embedding = embeddings_service.embed_query(current_question)
     query_result = pinecone_service.query(vector=query_embedding)
     context = pinecone_service.get_context(query_result)
-    
+    print("[CHAT] Step: Retrieval finished.")
     return {"context": [context]}
 
 def generate(state: State) -> dict:
@@ -66,9 +67,11 @@ def generate(state: State) -> dict:
     Returns:
         Dictionary containing the generated answer.
     """
+    print("[CHAT] Step: Generation started.")
     context = state["context"][0] if state["context"] else ""
     messages = gemini_service.create_messages(state["history"], context)
     answer = gemini_service.generate_response(messages)
+    print("[CHAT] Step: Generation finished.")
     return {"answer": answer}
 
 # Set up the LangGraph workflow
@@ -90,12 +93,22 @@ async def chat(query: QueryHistory):
         StreamingResponse with the generated response.
     """
     try:
+        print("[CHAT] Received /chat request with history length:", len(query.history))
         async def token_generator():
             state_input = {"history": [msg.dict() for msg in query.history]}
-            async for chunk in graph.astream(state_input, stream_mode="messages"):
-                yield chunk[0].content
-        return StreamingResponse(token_generator(), media_type="text/plain")
+            print("[CHAT] State input prepared:", state_input)
+            try:
+                async for chunk in graph.astream(state_input, stream_mode="messages"):
+                    yield chunk[0].content
+                print("[CHAT] Finished streaming response.")
+            except Exception as stream_exc:
+                print("[CHAT] Error during streaming:", stream_exc)
+                raise
+        response = StreamingResponse(token_generator(), media_type="text/plain")
+        print("[CHAT] Returning StreamingResponse.")
+        return response
     except Exception as e:
+        print("[CHAT] Exception in /chat endpoint:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/suggest-followups")
@@ -122,7 +135,7 @@ async def suggest_followups(query: QueryHistory):
             [msg.dict() for msg in query.history]
         )
         messages.append(HumanMessage(
-            content="Based on the conversation, suggest 1-2 NEW follow-up questions that either: "
+            content="Based on the conversation, suggest 1-2 NEW follow-up questions on the previous answerthat either: "
             "1) Ask for clarification about technical terms, key concepts, or unique terminology mentioned, or "
             "2) Explore unique aspects about Kostadin's background, experience, or preferences. "
             "Look for domain-specific terms, acronyms, or specialized vocabulary that might need explanation. "

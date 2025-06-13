@@ -13,7 +13,7 @@ class PineconeService:
         self._pc = Pinecone(api_key=settings.PINECONE_API_KEY)
         self._index = self._pc.Index(settings.PINECONE_API_INDEX)
     
-    def query(self, vector: List[float], top_k: int = 5, namespace: str = "docs") -> Dict[str, Any]:
+    def query(self, vector: List[float], top_k: int = settings.TOP_K, namespace: str = "docs") -> Dict[str, Any]:
         """
         Query the Pinecone index for similar vectors.
         
