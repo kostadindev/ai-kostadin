@@ -18,7 +18,6 @@ import {
 
 const { Header } = Layout;
 
-// Reusable particles component
 const ParticleBackground = memo(({ id }: { id: string }) => {
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 1200,
@@ -98,7 +97,6 @@ const ChatComponent: React.FC = () => {
   );
   const [init, setInit] = useState(false);
 
-  // Initialize tsParticles
   useEffect(() => {
     if (UI_CONFIG?.features?.enableParticles) {
       initParticlesEngine(async (engine: Engine) => {
@@ -225,11 +223,11 @@ const ChatComponent: React.FC = () => {
                 border: `1px solid ${token.colorBorder}`,
                 borderRadius: token.borderRadius,
                 position: "relative",
-                minHeight: 0, // Important for flex child to shrink
+                minHeight: 0,
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
-                height: "100%", // Ensure it fills available space
+                height: "100%",
               }}
             >
               <div
@@ -239,10 +237,10 @@ const ChatComponent: React.FC = () => {
                   backgroundColor: "transparent",
                   display: "flex",
                   flexDirection: "column",
-                  flex: 1, // Take up all available space
-                  overflow: "auto", // Enable scrolling within this container
-                  minHeight: 0, // Allow shrinking
-                  height: "100%", // Fill parent
+                  flex: 1,
+                  overflow: "auto",
+                  minHeight: 0,
+                  height: "100%",
                 }}
               >
                 <MessageList
